@@ -1,3 +1,7 @@
+
+# Next.js
+.next/
+
 # Dependencies
 /node_modules
 /.pnp
