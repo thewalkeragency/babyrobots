@@ -13,16 +13,6 @@ exports.id = "pages/_document";
 exports.ids = ["pages/_document"];
 exports.modules = {
 
-/***/ "@opentelemetry/api":
-/*!*************************************!*\
-  !*** external "@opentelemetry/api" ***!
-  \*************************************/
-/***/ ((module) => {
-
-module.exports = require("@opentelemetry/api");
-
-/***/ }),
-
 /***/ "next/dist/compiled/next-server/pages.runtime.dev.js":
 /*!**********************************************************************!*\
   !*** external "next/dist/compiled/next-server/pages.runtime.dev.js" ***!
