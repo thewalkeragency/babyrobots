@@ -1,5 +1,5 @@
 import Head from 'next/head';
-import ModernChat from '@/components/ModernChat';
+import SimpleModernChat from '@/components/SimpleModernChat';
 
 export default function Home() {
   return (
@@ -11,7 +11,7 @@ export default function Home() {
       </Head>
 
       <main className="h-screen">
-        <ModernChat />
+        <SimpleModernChat />
       </main>
     </div>
   );
