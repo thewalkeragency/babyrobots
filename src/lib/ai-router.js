@@ -102,7 +102,7 @@ class GeminiProvider extends AIProvider {
     const { role = 'assistant' } = options;
     
     const response = await fetch(
-      `${this.baseUrl}/gemini-pro:generateContent?key=${this.apiKey}`,
+      `${this.baseUrl}/gemini-1.5-flash-latest:generateContent?key=${this.apiKey}`,
       {
         method: 'POST',
         headers: {
@@ -123,7 +123,8 @@ class GeminiProvider extends AIProvider {
     );
 
     if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.status}`);
+      const errorText = await response.text();
+      throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
