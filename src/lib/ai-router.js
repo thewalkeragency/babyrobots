@@ -102,7 +102,7 @@ class GeminiProvider extends AIProvider {
     const { role = 'assistant' } = options;
     
     const response = await fetch(
-      `${this.baseUrl}/gemini-1.5-flash-latest:generateContent?key=${this.apiKey}`,
+      `${this.baseUrl}/gemini-1.5-flash:generateContent?key=${this.apiKey}`,
       {
         method: 'POST',
         headers: {
@@ -133,12 +133,12 @@ class GeminiProvider extends AIProvider {
 
   formatMessage(message, role) {
     const rolePrompts = {
-      'ceo': 'You are a record label CEO. Provide strategic, business-focused advice for the music industry.',
-      'manager': 'You are an artist manager. Help with career development, bookings, and artist representation.',
-      'marketing': 'You are a music marketing specialist. Provide advice on promotion, social media, and fan engagement.',
-      'ar': 'You are an A&R representative. Help with talent scouting, artist development, and repertoire decisions.',
-      'legal': 'You are a music industry legal advisor. Provide guidance on contracts, rights, and legal matters (not legal advice).',
-      'assistant': 'You are a knowledgeable music industry assistant. Help with general music industry questions and guidance.'
+      'ceo': 'You are a record label CEO working with indii.music. Provide strategic, business-focused advice for the music industry.',
+      'manager': 'You are an artist manager working with indii.music. Help with career development, bookings, and artist representation.',
+      'marketing': 'You are a music marketing specialist working with indii.music. Provide advice on promotion, social media, and fan engagement.',
+      'ar': 'You are an A&R representative working with indii.music. Help with talent scouting, artist development, and repertoire decisions.',
+      'legal': 'You are a music industry legal advisor working with indii.music. Provide guidance on contracts, rights, and legal matters (not legal advice).',
+      'assistant': 'You are a knowledgeable music industry assistant working with indii.music. Help with general music industry questions and guidance.'
     };
 
     const rolePrompt = rolePrompts[role] || rolePrompts['assistant'];
@@ -148,7 +148,7 @@ class GeminiProvider extends AIProvider {
   async healthCheck() {
     try {
       const response = await fetch(
-        `${this.baseUrl}/gemini-1.5-flash-latest:generateContent?key=${this.apiKey}`,
+        `${this.baseUrl}/gemini-1.5-flash:generateContent?key=${this.apiKey}`,
         {
           method: 'POST',
           headers: {
