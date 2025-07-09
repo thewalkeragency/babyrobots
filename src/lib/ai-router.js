@@ -148,7 +148,7 @@ class GeminiProvider extends AIProvider {
   async healthCheck() {
     try {
       const response = await fetch(
-        `${this.baseUrl}/gemini-pro:generateContent?key=${this.apiKey}`,
+        `${this.baseUrl}/gemini-1.5-flash-latest:generateContent?key=${this.apiKey}`,
         {
           method: 'POST',
           headers: {
