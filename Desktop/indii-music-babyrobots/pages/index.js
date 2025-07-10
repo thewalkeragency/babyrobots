@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import CursorStyleDashboard from '@/components/Dashboard/CursorStyleDashboard';
 import SimpleModernChat from '@/components/SimpleModernChat';
 import AudioUploadForm from '@/components/AudioUploadForm';
 import RegisterForm from '@/components/RegisterForm';
@@ -14,6 +15,8 @@ export default function Home() {
   // For demonstration, we'll use a hardcoded userId. In a real app, this would come from authentication.
   // Setting to null initially to avoid API calls until user logs in
   const demoUserId = null;
+  const currentUser = "Demo Artist"; // Demo user name
+  const userRole = "artist"; // Demo user role
 
   return (
     <div>
@@ -23,24 +26,10 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="h-screen">
-        <SimpleModernChat />
-        <AudioUploadForm />
-        <RegisterForm />
-        <LoginForm />
-        {/* Render ArtistProfileForm for a demo user */}
-        <ArtistProfileForm userId={demoUserId} />
-        {/* Render FanProfileForm for a demo user */}
-        <FanProfileForm userId={demoUserId} />
-        {/* Render LicensorProfileForm for a demo user */}
-        <LicensorProfileForm userId={demoUserId} />
-        {/* Render ServiceProviderProfileForm for a demo user */}
-        <ServiceProviderProfileForm userId={demoUserId} />
-        {/* Render TrackForm for a demo artist */}
-        <TrackForm artistId={demoUserId} />
-        {/* Render TrackList for a demo artist */}
-        <TrackList artistId={demoUserId} />
-      </main>
+      {/* Cursor-style Dashboard - no MainLayout wrapper needed */}
+      <CursorStyleDashboard userRole={userRole} userId={demoUserId} currentUser={currentUser} />
+      
+      {/* Development forms - completely hidden */}
     </div>
   );
 }
