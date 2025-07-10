@@ -65,19 +65,19 @@ const ENHANCED_TASKS = {
     trigger: ['royalty', 'earnings', 'revenue', 'payment'],
     template: `**Your Royalty Breakdown - Simple Explanation**
 
-💰 **Total Earnings:** ${totalEarnings}
+💰 **Total Earnings:** {totalEarnings}
 📈 **Change from last month:** {changePercent}%
 
 **Where your money came from:**
-🎵 Streaming (Spotify, Apple Music): ${streamingRevenue}
-📻 Performance (ASCAP/BMI): ${performanceRevenue}
-🎬 Sync Licensing: ${syncRevenue}
-🔐 Sound Locker Sales: ${directRevenue}
+🎵 Streaming (Spotify, Apple Music): {streamingRevenue}
+📻 Performance (ASCAP/BMI): {performanceRevenue}
+🎬 Sync Licensing: {syncRevenue}
+🔐 Sound Locker Sales: {directRevenue}
 
 **Platform fees (transparent):**
-- indii.music commission: {platformFee}% (${platformFeeAmount})
-- Payment processing: ${processingFee}
-- **You keep:** ${netPayout} ({artistShare}%)
+- indii.music commission: {platformFee}% ({platformFeeAmount})
+- Payment processing: {processingFee}
+- **You keep:** {netPayout} ({artistShare}%)
 
 **What this means:** {explanation}
 
