@@ -8,7 +8,13 @@ const db = new Database(dbPath);
 // Enable foreign keys
 db.pragma('foreign_keys = ON');
 
-// Initialize database schema
+/**
+ * Initializes the SQLite database schema for the music application.
+ *
+ * Creates all required tables with appropriate columns, constraints, and foreign keys if they do not already exist. Ensures foreign key support and sets up tables for users, various profile types, tracks, audio files, chat sessions (including session-specific context), and chat messages.
+ *
+ * @throws Will throw an error if database initialization fails.
+ */
 function initializeDatabase() {
   try {
     // Users table

@@ -1,5 +1,9 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { getChatSession, createChatMessage } from '../../../../lib/db'; // Adjusted path
+import { getChatSession, createChatMessage } from '../../../../lib/db'; /**
+ * Handles POST requests to interact with the Google Gemini generative AI model and optionally saves chat messages to a database.
+ *
+ * Accepts a user message, optional chat history, session ID, and user ID in the request body. Returns the AI-generated reply. If a session ID is provided and the session exists, the user message and AI response are saved to the database. Responds with appropriate error messages for invalid requests or configuration issues.
+ */
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
