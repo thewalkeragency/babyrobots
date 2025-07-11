@@ -144,6 +144,7 @@ function initializeDatabase() {
         role TEXT DEFAULT 'general',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         last_activity DATETIME DEFAULT CURRENT_TIMESTAMP,
+        context_json TEXT DEFAULT NULL, -- Added for session-specific agent context
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
       )
     `);
@@ -374,10 +375,30 @@ const db_helpers = {
     const stmt = db.prepare(`
       SELECT * FROM chat_messages 
       WHERE session_id = ? 
-      ORDER BY created_at DESC 
+      ORDER BY created_at DESC, id DESC
       LIMIT ?
     `);
     return stmt.all(sessionId, limit);
+  },
+
+  updateSessionContext: (sessionId, contextData) => {
+    const contextJsonString = JSON.stringify(contextData);
+    const stmt = db.prepare('UPDATE chat_sessions SET context_json = ? WHERE session_id = ?');
+    return stmt.run(contextJsonString, sessionId);
+  },
+
+  getSessionContext: (sessionId) => {
+    const stmt = db.prepare('SELECT context_json FROM chat_sessions WHERE session_id = ?');
+    const row = stmt.get(sessionId);
+    if (row && row.context_json) {
+      try {
+        return JSON.parse(row.context_json);
+      } catch (e) {
+        console.error("Error parsing session context JSON:", e);
+        return null; // Or throw, or return the raw string
+      }
+    }
+    return null;
   }
 };
 
