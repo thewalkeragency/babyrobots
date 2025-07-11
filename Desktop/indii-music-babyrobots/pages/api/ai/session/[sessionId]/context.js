@@ -1,4 +1,8 @@
-import { getChatSession, updateSessionContext } from '../../../../../lib/db'; // Adjust path as needed
+import { getChatSession, updateSessionContext } from '../../../../../lib/db'; /**
+ * Handles POST requests to update the context data of a chat session identified by sessionId.
+ *
+ * Validates the presence of sessionId in the query and contextData in the request body. If the session exists, updates its context; otherwise, responds with appropriate HTTP error codes. Only POST requests are allowed; other methods receive a 405 Method Not Allowed response.
+ */
 
 export default async function handler(req, res) {
   const { sessionId } = req.query;
