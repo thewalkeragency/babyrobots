@@ -91,7 +91,8 @@ describe('Database Operations (lib/db.js)', () => {
       const expectedTables = [
         'users', 'artist_profiles', 'fan_profiles', 'licensor_profiles',
         'service_provider_profiles', 'tracks', 'audio_files',
-        'chat_sessions', 'chat_messages'
+        'chat_sessions', 'chat_messages', 'split_sheets', 'split_sheet_contributors',
+        'project_workspaces', 'workspace_files', 'workspace_tasks'
       ];
       const tablesQuery = testDb.prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;");
       const tables = tablesQuery.all().map(t => t.name).filter(name => !name.startsWith('sqlite_'));
@@ -576,6 +577,200 @@ describe('Database Operations (lib/db.js)', () => {
         session = dbLib.getChatSession(sessionId);
         expect(session).toBeDefined(); // Session should still exist
         expect(session.user_id).toBeNull(); // user_id should be set to NULL
+    });
+  });
+
+  describe('Music & Content Management Operations', () => {
+    let artistUserId, trackId;
+
+    beforeEach(() => {
+      // Create artist user and track for testing
+      const userResult = dbLib.createUser({
+        email: 'musicartist@example.com',
+        password_hash: 'password',
+        username: 'musicmaker',
+        profile_type: 'artist'
+      });
+      artistUserId = userResult.lastInsertRowid;
+
+      const trackResult = dbLib.createTrack({
+        artist_id: artistUserId,
+        title: 'Test Music Track',
+        duration: 240,
+        genre: 'Hip-Hop',
+        mood: 'Energetic',
+        bpm: 140,
+        key_signature: 'A Minor',
+        file_url: '/music/test.mp3',
+        artwork_url: '/art/test.jpg',
+        description: 'A test music track',
+        tags: 'test,hip-hop',
+        is_public: 1
+      });
+      trackId = trackResult.lastInsertRowid;
+    });
+
+    describe('Split Sheet Operations', () => {
+      it('should create a split sheet and retrieve it', () => {
+        const splitSheetData = {
+          track_id: trackId,
+          description: 'Revenue split for Test Music Track'
+        };
+        const result = dbLib.createSplitSheet(splitSheetData);
+        expect(result.lastInsertRowid).toBeGreaterThan(0);
+
+        const splitSheets = dbLib.getSplitSheetsByTrack(trackId);
+        expect(splitSheets).toHaveLength(1);
+        expect(splitSheets[0].description).toBe(splitSheetData.description);
+      });
+
+      it('should create split sheet contributors', () => {
+        const splitSheetResult = dbLib.createSplitSheet({
+          track_id: trackId,
+          description: 'Test split sheet'
+        });
+        const splitSheetId = splitSheetResult.lastInsertRowid;
+
+        const contributorData = {
+          split_sheet_id: splitSheetId,
+          name: 'Producer Smith',
+          role: 'Producer',
+          percentage: 50.0
+        };
+        const result = dbLib.createSplitSheetContributor(contributorData);
+        expect(result.lastInsertRowid).toBeGreaterThan(0);
+
+        const contributors = dbLib.getContributorsBySplitSheet(splitSheetId);
+        expect(contributors).toHaveLength(1);
+        expect(contributors[0].name).toBe(contributorData.name);
+        expect(contributors[0].percentage).toBe(contributorData.percentage);
+      });
+    });
+
+    describe('Project Workspace Operations', () => {
+      it('should create a project workspace and retrieve it', () => {
+        const workspaceData = {
+          user_id: artistUserId,
+          name: 'Album Project 2025',
+          description: 'Working on my next album'
+        };
+        const result = dbLib.createProjectWorkspace(workspaceData);
+        expect(result.lastInsertRowid).toBeGreaterThan(0);
+        const workspaceId = result.lastInsertRowid;
+
+        const workspaces = dbLib.getWorkspacesByUser(artistUserId);
+        expect(workspaces).toHaveLength(1);
+        expect(workspaces[0].name).toBe(workspaceData.name);
+
+        const workspace = dbLib.getWorkspaceById(workspaceId);
+        expect(workspace).toBeDefined();
+        expect(workspace.description).toBe(workspaceData.description);
+      });
+
+      it('should create workspace files', () => {
+        const workspaceResult = dbLib.createProjectWorkspace({
+          user_id: artistUserId,
+          name: 'Test Workspace',
+          description: 'Test'
+        });
+        const workspaceId = workspaceResult.lastInsertRowid;
+
+        const fileData = {
+          workspace_id: workspaceId,
+          filename: 'demo.wav',
+          file_path: '/workspaces/files/demo.wav'
+        };
+        const result = dbLib.createWorkspaceFile(fileData);
+        expect(result.lastInsertRowid).toBeGreaterThan(0);
+
+        const files = dbLib.getFilesByWorkspace(workspaceId);
+        expect(files).toHaveLength(1);
+        expect(files[0].filename).toBe(fileData.filename);
+      });
+
+      it('should create and manage workspace tasks', () => {
+        const workspaceResult = dbLib.createProjectWorkspace({
+          user_id: artistUserId,
+          name: 'Task Workspace',
+          description: 'Test workspace for tasks'
+        });
+        const workspaceId = workspaceResult.lastInsertRowid;
+
+        const taskData = {
+          workspace_id: workspaceId,
+          title: 'Record vocals',
+          description: 'Record lead vocals for chorus',
+          due_date: '2025-08-01',
+          is_completed: false
+        };
+        const result = dbLib.createWorkspaceTask(taskData);
+        expect(result.lastInsertRowid).toBeGreaterThan(0);
+        const taskId = result.lastInsertRowid;
+
+        const tasks = dbLib.getTasksByWorkspace(workspaceId);
+        expect(tasks).toHaveLength(1);
+        expect(tasks[0].title).toBe(taskData.title);
+
+        // Test task completion update
+        const updateResult = dbLib.updateTaskCompletion(taskId, true);
+        expect(updateResult.changes).toBe(1);
+
+        const updatedTasks = dbLib.getTasksByWorkspace(workspaceId);
+        expect(updatedTasks[0].is_completed).toBe(1); // SQLite stores boolean as integer
+      });
+    });
+
+    describe('Music & Content Management Foreign Key Constraints', () => {
+      it('ON DELETE CASCADE for split_sheets when track is deleted', () => {
+        const splitSheetResult = dbLib.createSplitSheet({
+          track_id: trackId,
+          description: 'Test split sheet for cascade'
+        });
+        const splitSheetId = splitSheetResult.lastInsertRowid;
+
+        let splitSheets = dbLib.getSplitSheetsByTrack(trackId);
+        expect(splitSheets).toHaveLength(1);
+
+        // Delete the track
+        dbLib.db.prepare('DELETE FROM tracks WHERE id = ?').run(trackId);
+
+        splitSheets = dbLib.getSplitSheetsByTrack(trackId);
+        expect(splitSheets).toEqual([]); // Split sheets should be deleted
+      });
+
+      it('ON DELETE CASCADE for workspace components when workspace is deleted', () => {
+        const workspaceResult = dbLib.createProjectWorkspace({
+          user_id: artistUserId,
+          name: 'Cascade Test Workspace',
+          description: 'Test workspace for cascade'
+        });
+        const workspaceId = workspaceResult.lastInsertRowid;
+
+        // Create workspace file and task
+        dbLib.createWorkspaceFile({
+          workspace_id: workspaceId,
+          filename: 'test.wav',
+          file_path: '/test.wav'
+        });
+        dbLib.createWorkspaceTask({
+          workspace_id: workspaceId,
+          title: 'Test Task',
+          description: 'Test task description'
+        });
+
+        let files = dbLib.getFilesByWorkspace(workspaceId);
+        let tasks = dbLib.getTasksByWorkspace(workspaceId);
+        expect(files).toHaveLength(1);
+        expect(tasks).toHaveLength(1);
+
+        // Delete the workspace
+        dbLib.db.prepare('DELETE FROM project_workspaces WHERE id = ?').run(workspaceId);
+
+        files = dbLib.getFilesByWorkspace(workspaceId);
+        tasks = dbLib.getTasksByWorkspace(workspaceId);
+        expect(files).toEqual([]); // Files should be deleted
+        expect(tasks).toEqual([]); // Tasks should be deleted
+      });
     });
   });
 

@@ -96,6 +96,65 @@ function initializeDatabase() {
       )
     `);
 
+// Split sheets
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS split_sheets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        track_id INTEGER NOT NULL,
+        description TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (track_id) REFERENCES tracks (id) ON DELETE CASCADE
+      )
+    `);
+
+    // Split sheet contributors
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS split_sheet_contributors (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        split_sheet_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        role TEXT,
+        percentage REAL NOT NULL,
+        FOREIGN KEY (split_sheet_id) REFERENCES split_sheets (id) ON DELETE CASCADE
+      )
+    `);
+
+    // Project workspaces
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS project_workspaces (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        description TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      )
+    `);
+
+    // Workspace files
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS workspace_files (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        workspace_id INTEGER NOT NULL,
+        filename TEXT NOT NULL,
+        file_path TEXT NOT NULL,
+        FOREIGN KEY (workspace_id) REFERENCES project_workspaces (id) ON DELETE CASCADE
+      )
+    `);
+
+    // Workspace tasks
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS workspace_tasks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        workspace_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT,
+        due_date DATETIME,
+        is_completed BOOLEAN DEFAULT false,
+        FOREIGN KEY (workspace_id) REFERENCES project_workspaces (id) ON DELETE CASCADE
+      )
+    `);
+
     // Tracks table
     db.exec(`
       CREATE TABLE IF NOT EXISTS tracks (
@@ -399,6 +458,105 @@ const db_helpers = {
       }
     }
     return null;
+  },
+
+  // Split sheet operations
+  createSplitSheet: (splitSheetData) => {
+    const stmt = db.prepare(`
+      INSERT INTO split_sheets (track_id, description)
+      VALUES (?, ?)
+    `);
+    return stmt.run(splitSheetData.track_id, splitSheetData.description);
+  },
+
+  getSplitSheetsByTrack: (trackId) => {
+    const stmt = db.prepare('SELECT * FROM split_sheets WHERE track_id = ?');
+    return stmt.all(trackId);
+  },
+
+  // Split sheet contributor operations
+  createSplitSheetContributor: (contributorData) => {
+    const stmt = db.prepare(`
+      INSERT INTO split_sheet_contributors (split_sheet_id, name, role, percentage)
+      VALUES (?, ?, ?, ?)
+    `);
+    return stmt.run(
+      contributorData.split_sheet_id,
+      contributorData.name,
+      contributorData.role,
+      contributorData.percentage
+    );
+  },
+
+  getContributorsBySplitSheet: (splitSheetId) => {
+    const stmt = db.prepare('SELECT * FROM split_sheet_contributors WHERE split_sheet_id = ?');
+    return stmt.all(splitSheetId);
+  },
+
+  // Project workspace operations
+  createProjectWorkspace: (workspaceData) => {
+    const stmt = db.prepare(`
+      INSERT INTO project_workspaces (user_id, name, description)
+      VALUES (?, ?, ?)
+    `);
+    return stmt.run(
+      workspaceData.user_id,
+      workspaceData.name,
+      workspaceData.description
+    );
+  },
+
+  getWorkspacesByUser: (userId) => {
+    const stmt = db.prepare('SELECT * FROM project_workspaces WHERE user_id = ? ORDER BY created_at DESC');
+    return stmt.all(userId);
+  },
+
+  getWorkspaceById: (id) => {
+    const stmt = db.prepare('SELECT * FROM project_workspaces WHERE id = ?');
+    return stmt.get(id);
+  },
+
+  // Workspace file operations
+  createWorkspaceFile: (fileData) => {
+    const stmt = db.prepare(`
+      INSERT INTO workspace_files (workspace_id, filename, file_path)
+      VALUES (?, ?, ?)
+    `);
+    return stmt.run(
+      fileData.workspace_id,
+      fileData.filename,
+      fileData.file_path
+    );
+  },
+
+  getFilesByWorkspace: (workspaceId) => {
+    const stmt = db.prepare('SELECT * FROM workspace_files WHERE workspace_id = ?');
+    return stmt.all(workspaceId);
+  },
+
+  // Workspace task operations
+  createWorkspaceTask: (taskData) => {
+    const stmt = db.prepare(`
+      INSERT INTO workspace_tasks (workspace_id, title, description, due_date, is_completed)
+      VALUES (?, ?, ?, ?, ?)
+    `);
+    return stmt.run(
+      taskData.workspace_id,
+      taskData.title,
+      taskData.description,
+      taskData.due_date,
+      taskData.is_completed ? 1 : 0
+    );
+  },
+
+  getTasksByWorkspace: (workspaceId) => {
+    const stmt = db.prepare('SELECT * FROM workspace_tasks WHERE workspace_id = ? ORDER BY due_date ASC');
+    return stmt.all(workspaceId);
+  },
+
+  updateTaskCompletion: (taskId, isCompleted) => {
+    const stmt = db.prepare('UPDATE workspace_tasks SET is_completed = ? WHERE id = ?');
+    return stmt.run(isCompleted ? 1 : 0, taskId);
   }
 };
 

@@ -14,11 +14,11 @@ This document outlines the development roadmap for the indii.music application, 
     - [ ] Update `lib/db.js` to manage these new profile types.
 - [ ] **Testing: User Profile Database Operations**
 
-- [ ] **Music & Content Management:**
-    - [ ] Implement `tracks` table.
-    - [ ] Implement `split_sheets` and `split_sheet_contributors` tables.
-    - [ ] Implement `project_workspaces`, `workspace_files`, and `workspace_tasks` tables.
-- [ ] **Testing: Music & Content Database Operations**
+- [x] **Music & Content Management:**
+    - [x] Implement `tracks` table.
+    - [x] Implement `split_sheets` and `split_sheet_contributors` tables.
+    - [x] Implement `project_workspaces`, `workspace_files`, and `workspace_tasks` tables.
+- [x] **Testing: Music & Content Database Operations**
 
 - [ ] **Royalty & Revenue Tracking:**
     - [ ] Implement `royalty_sources`, `royalty_records`, and `payout_records` tables.
