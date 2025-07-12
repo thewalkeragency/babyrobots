@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { clsx } from 'clsx';
 import VanillaTilt from 'vanilla-tilt';
-import { Card, Badge, Button, Progress } from '../UI';
+import { Card, Badge, Button, Progress } from '../ui';
 import ArtCreationWorkspace from '../ArtCreation/ArtCreationWorkspace';
+import TaskManager from '../TaskManager';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { 
   WaveformDisplay, 
@@ -423,6 +424,16 @@ const IndiiMusicDashboard = ({ userRole = 'artist', userId, currentUser }) => {
                 genre: "Electronic",
                 mood: "Uplifting"
               }}
+            />
+          </div>
+        );
+
+      case 'projects':
+        return (
+          <div className="h-full">
+            <TaskManager 
+              userId={userId || 'demo-user-id'} 
+              userRole={userRole}
             />
           </div>
         );
