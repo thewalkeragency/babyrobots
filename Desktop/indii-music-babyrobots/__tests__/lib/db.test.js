@@ -92,7 +92,9 @@ describe('Database Operations (lib/db.js)', () => {
         'users', 'artist_profiles', 'fan_profiles', 'licensor_profiles',
         'service_provider_profiles', 'tracks', 'audio_files',
         'chat_sessions', 'chat_messages', 'split_sheets', 'split_sheet_contributors',
-        'project_workspaces', 'workspace_files', 'workspace_tasks'
+        'project_workspaces', 'workspace_files', 'workspace_tasks',
+        'accounts', 'sessions', 'verification_tokens', 'user_roles',
+        'security_logs', 'password_resets'
       ];
       const tablesQuery = testDb.prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;");
       const tables = tablesQuery.all().map(t => t.name).filter(name => !name.startsWith('sqlite_'));
@@ -121,6 +123,45 @@ describe('Database Operations (lib/db.js)', () => {
         const columns = testDb.pragma(`table_info(chat_messages)`).map(col => col.name);
         expect(columns).toEqual(expect.arrayContaining([
             'id', 'session_id', 'message', 'response', 'role', 'created_at'
+        ]));
+    });
+
+    // Test authentication table structures
+    it('accounts table should have correct columns', () => {
+        const columns = testDb.pragma(`table_info(accounts)`).map(col => col.name);
+        expect(columns).toEqual(expect.arrayContaining([
+            'id', 'user_id', 'type', 'provider', 'provider_account_id', 'refresh_token',
+            'access_token', 'expires_at', 'token_type', 'scope', 'id_token', 'session_state',
+            'created_at', 'updated_at'
+        ]));
+    });
+
+    it('sessions table should have correct columns', () => {
+        const columns = testDb.pragma(`table_info(sessions)`).map(col => col.name);
+        expect(columns).toEqual(expect.arrayContaining([
+            'id', 'session_token', 'user_id', 'expires', 'created_at', 'updated_at'
+        ]));
+    });
+
+    it('user_roles table should have correct columns', () => {
+        const columns = testDb.pragma(`table_info(user_roles)`).map(col => col.name);
+        expect(columns).toEqual(expect.arrayContaining([
+            'id', 'user_id', 'role', 'is_active', 'assigned_by', 'assigned_at',
+            'expires_at', 'created_at', 'updated_at'
+        ]));
+    });
+
+    it('security_logs table should have correct columns', () => {
+        const columns = testDb.pragma(`table_info(security_logs)`).map(col => col.name);
+        expect(columns).toEqual(expect.arrayContaining([
+            'id', 'user_id', 'action', 'ip_address', 'user_agent', 'success', 'details', 'created_at'
+        ]));
+    });
+
+    it('password_resets table should have correct columns', () => {
+        const columns = testDb.pragma(`table_info(password_resets)`).map(col => col.name);
+        expect(columns).toEqual(expect.arrayContaining([
+            'id', 'user_id', 'token', 'expires', 'used', 'created_at'
         ]));
     });
   });
@@ -308,9 +349,9 @@ describe('Database Operations (lib/db.js)', () => {
         expect(history).toEqual([]);
     });
 
-    it('getChatSession should return undefined for non-existent session', () => {
+    it('getChatSession should return null for non-existent session', () => {
         const session = dbLib.getChatSession('non_existent_session_id');
-        expect(session).toBeUndefined();
+        expect(session).toBeNull();
     });
 
     it('should update and retrieve session context', () => {
@@ -560,7 +601,7 @@ describe('Database Operations (lib/db.js)', () => {
         expect(messages).toEqual([]); // Messages should be deleted
 
         const sessionCheck = dbLib.getChatSession(sessionId);
-        expect(sessionCheck).toBeUndefined(); // Session is confirmed deleted
+        expect(sessionCheck).toBeNull(); // Session is confirmed deleted
     });
 
     it('ON DELETE SET NULL for chat_sessions.user_id when user is deleted', () => {
@@ -770,6 +811,579 @@ describe('Database Operations (lib/db.js)', () => {
         tasks = dbLib.getTasksByWorkspace(workspaceId);
         expect(files).toEqual([]); // Files should be deleted
         expect(tasks).toEqual([]); // Tasks should be deleted
+      });
+    });
+  });
+
+  // Test Authentication System Operations
+  describe('Authentication System Operations', () => {
+    let testUser;
+    let testUserId;
+    let adminUser;
+    let adminUserId;
+
+    beforeEach(() => {
+      // Create test users for authentication operations
+      const userResult = dbLib.createUser({
+        email: 'authuser@example.com',
+        password_hash: 'hashedpassword123',
+        username: 'authuser',
+        first_name: 'Auth',
+        last_name: 'User',
+        profile_type: 'artist'
+      });
+      testUserId = userResult.lastInsertRowid;
+      testUser = dbLib.getUserById(testUserId);
+
+      const adminResult = dbLib.createUser({
+        email: 'admin@example.com',
+        password_hash: 'adminpassword',
+        username: 'admin',
+        first_name: 'Admin',
+        last_name: 'User',
+        profile_type: 'artist'
+      });
+      adminUserId = adminResult.lastInsertRowid;
+      adminUser = dbLib.getUserById(adminUserId);
+    });
+
+    describe('OAuth Account Management', () => {
+      it('should create and retrieve OAuth accounts', () => {
+        const accountData = {
+          id: 'account_123',
+          user_id: testUserId,
+          type: 'oauth',
+          provider: 'google',
+          provider_account_id: 'google_123456',
+          access_token: 'access_token_123',
+          refresh_token: 'refresh_token_123',
+          expires_at: Math.floor(Date.now() / 1000) + 3600,
+          token_type: 'Bearer',
+          scope: 'email profile'
+        };
+
+        // Manual insertion since we need to test the table structure
+        const insertResult = testDb.prepare(`
+          INSERT INTO accounts (
+            id, user_id, type, provider, provider_account_id, 
+            access_token, refresh_token, expires_at, token_type, scope
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          accountData.id,
+          accountData.user_id,
+          accountData.type,
+          accountData.provider,
+          accountData.provider_account_id,
+          accountData.access_token,
+          accountData.refresh_token,
+          accountData.expires_at,
+          accountData.token_type,
+          accountData.scope
+        );
+
+        expect(insertResult.changes).toBe(1);
+
+        const retrievedAccount = testDb.prepare(
+          'SELECT * FROM accounts WHERE user_id = ? AND provider = ?'
+        ).get(testUserId, 'google');
+
+        expect(retrievedAccount).toBeDefined();
+        expect(retrievedAccount.provider_account_id).toBe(accountData.provider_account_id);
+        expect(retrievedAccount.user_id).toBe(testUserId);
+      });
+
+      it('should enforce unique provider + provider_account_id constraint', () => {
+        const accountData = {
+          id: 'account_duplicate_1',
+          user_id: testUserId,
+          type: 'oauth',
+          provider: 'google',
+          provider_account_id: 'duplicate_id',
+          access_token: 'token1'
+        };
+
+        testDb.prepare(`
+          INSERT INTO accounts (id, user_id, type, provider, provider_account_id, access_token)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `).run(
+          accountData.id,
+          accountData.user_id,
+          accountData.type,
+          accountData.provider,
+          accountData.provider_account_id,
+          accountData.access_token
+        );
+
+        // Try to insert another account with same provider + provider_account_id
+        expect(() => {
+          testDb.prepare(`
+            INSERT INTO accounts (id, user_id, type, provider, provider_account_id, access_token)
+            VALUES (?, ?, ?, ?, ?, ?)
+          `).run(
+            'account_duplicate_2',
+            adminUserId,
+            'oauth',
+            'google',
+            'duplicate_id',
+            'token2'
+          );
+        }).toThrow(/UNIQUE constraint failed/);
+      });
+    });
+
+    describe('Session Management', () => {
+      it('should create and retrieve user sessions', () => {
+        const sessionData = {
+          id: 'session_abc123',
+          session_token: 'token_xyz789',
+          user_id: testUserId,
+          expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours from now
+        };
+
+        const insertResult = testDb.prepare(`
+          INSERT INTO sessions (id, session_token, user_id, expires)
+          VALUES (?, ?, ?, ?)
+        `).run(
+          sessionData.id,
+          sessionData.session_token,
+          sessionData.user_id,
+          sessionData.expires
+        );
+
+        expect(insertResult.changes).toBe(1);
+
+        const retrievedSession = testDb.prepare(
+          'SELECT * FROM sessions WHERE session_token = ?'
+        ).get(sessionData.session_token);
+
+        expect(retrievedSession).toBeDefined();
+        expect(retrievedSession.user_id).toBe(testUserId);
+        expect(retrievedSession.id).toBe(sessionData.id);
+      });
+
+      it('should enforce unique session_token constraint', () => {
+        const token = 'unique_session_token';
+        
+        testDb.prepare(`
+          INSERT INTO sessions (id, session_token, user_id, expires)
+          VALUES (?, ?, ?, ?)
+        `).run(
+          'session1',
+          token,
+          testUserId,
+          new Date(Date.now() + 3600000).toISOString()
+        );
+
+        expect(() => {
+          testDb.prepare(`
+            INSERT INTO sessions (id, session_token, user_id, expires)
+            VALUES (?, ?, ?, ?)
+          `).run(
+            'session2',
+            token,
+            adminUserId,
+            new Date(Date.now() + 3600000).toISOString()
+          );
+        }).toThrow(/UNIQUE constraint failed/);
+      });
+    });
+
+    describe('User Role Management', () => {
+      it('should create and manage user roles', () => {
+        const roleData = {
+          user_id: testUserId,
+          role: 'premium_user',
+          is_active: true,
+          assigned_by: adminUserId,
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days
+        };
+
+        const insertResult = testDb.prepare(`
+          INSERT INTO user_roles (user_id, role, is_active, assigned_by, expires_at)
+          VALUES (?, ?, ?, ?, ?)
+        `).run(
+          roleData.user_id,
+          roleData.role,
+          roleData.is_active ? 1 : 0,
+          roleData.assigned_by,
+          roleData.expires_at
+        );
+
+        expect(insertResult.changes).toBe(1);
+
+        const retrievedRole = testDb.prepare(
+          'SELECT * FROM user_roles WHERE user_id = ? AND role = ?'
+        ).get(testUserId, 'premium_user');
+
+        expect(retrievedRole).toBeDefined();
+        expect(retrievedRole.user_id).toBe(testUserId);
+        expect(retrievedRole.role).toBe('premium_user');
+        expect(retrievedRole.is_active).toBe(1);
+        expect(retrievedRole.assigned_by).toBe(adminUserId);
+      });
+
+      it('should enforce unique user_id + role constraint', () => {
+        testDb.prepare(`
+          INSERT INTO user_roles (user_id, role, is_active)
+          VALUES (?, ?, ?)
+        `).run(testUserId, 'admin', 1);
+
+        expect(() => {
+          testDb.prepare(`
+            INSERT INTO user_roles (user_id, role, is_active)
+            VALUES (?, ?, ?)
+          `).run(testUserId, 'admin', 1);
+        }).toThrow(/UNIQUE constraint failed/);
+      });
+
+      it('should handle role deactivation', () => {
+        // Create active role
+        testDb.prepare(`
+          INSERT INTO user_roles (user_id, role, is_active)
+          VALUES (?, ?, ?)
+        `).run(testUserId, 'moderator', 1);
+
+        // Deactivate role
+        const updateResult = testDb.prepare(`
+          UPDATE user_roles SET is_active = 0 WHERE user_id = ? AND role = ?
+        `).run(testUserId, 'moderator');
+
+        expect(updateResult.changes).toBe(1);
+
+        const role = testDb.prepare(
+          'SELECT * FROM user_roles WHERE user_id = ? AND role = ?'
+        ).get(testUserId, 'moderator');
+
+        expect(role.is_active).toBe(0);
+      });
+    });
+
+    describe('Security Logging', () => {
+      it('should log security events', () => {
+        const logData = {
+          user_id: testUserId,
+          action: 'login_attempt',
+          ip_address: '192.168.1.100',
+          user_agent: 'Mozilla/5.0...',
+          success: true,
+          details: JSON.stringify({ method: 'password', timestamp: Date.now() })
+        };
+
+        const insertResult = testDb.prepare(`
+          INSERT INTO security_logs (user_id, action, ip_address, user_agent, success, details)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `).run(
+          logData.user_id,
+          logData.action,
+          logData.ip_address,
+          logData.user_agent,
+          logData.success ? 1 : 0,
+          logData.details
+        );
+
+        expect(insertResult.changes).toBe(1);
+
+        const retrievedLog = testDb.prepare(
+          'SELECT * FROM security_logs WHERE user_id = ? AND action = ?'
+        ).get(testUserId, 'login_attempt');
+
+        expect(retrievedLog).toBeDefined();
+        expect(retrievedLog.ip_address).toBe(logData.ip_address);
+        expect(retrievedLog.success).toBe(1);
+        expect(retrievedLog.details).toBe(logData.details);
+      });
+
+      it('should allow anonymous security logs', () => {
+        const logData = {
+          user_id: null,
+          action: 'failed_login_attempt',
+          ip_address: '10.0.0.1',
+          success: false
+        };
+
+        const insertResult = testDb.prepare(`
+          INSERT INTO security_logs (user_id, action, ip_address, success)
+          VALUES (?, ?, ?, ?)
+        `).run(
+          logData.user_id,
+          logData.action,
+          logData.ip_address,
+          logData.success ? 1 : 0
+        );
+
+        expect(insertResult.changes).toBe(1);
+
+        const retrievedLog = testDb.prepare(
+          'SELECT * FROM security_logs WHERE action = ? AND ip_address = ?'
+        ).get('failed_login_attempt', '10.0.0.1');
+
+        expect(retrievedLog).toBeDefined();
+        expect(retrievedLog.user_id).toBeNull();
+        expect(retrievedLog.success).toBe(0);
+      });
+    });
+
+    describe('Password Reset Management', () => {
+      it('should create and manage password reset tokens', () => {
+        const resetData = {
+          id: 'reset_token_123',
+          user_id: testUserId,
+          token: 'secure_reset_token_xyz',
+          expires: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hour
+          used: false
+        };
+
+        const insertResult = testDb.prepare(`
+          INSERT INTO password_resets (id, user_id, token, expires, used)
+          VALUES (?, ?, ?, ?, ?)
+        `).run(
+          resetData.id,
+          resetData.user_id,
+          resetData.token,
+          resetData.expires,
+          resetData.used ? 1 : 0
+        );
+
+        expect(insertResult.changes).toBe(1);
+
+        const retrievedReset = testDb.prepare(
+          'SELECT * FROM password_resets WHERE token = ?'
+        ).get(resetData.token);
+
+        expect(retrievedReset).toBeDefined();
+        expect(retrievedReset.user_id).toBe(testUserId);
+        expect(retrievedReset.used).toBe(0);
+      });
+
+      it('should mark password reset tokens as used', () => {
+        const token = 'test_reset_token';
+        
+        testDb.prepare(`
+          INSERT INTO password_resets (id, user_id, token, expires, used)
+          VALUES (?, ?, ?, ?, ?)
+        `).run(
+          'reset_123',
+          testUserId,
+          token,
+          new Date(Date.now() + 3600000).toISOString(),
+          0
+        );
+
+        // Mark as used
+        const updateResult = testDb.prepare(`
+          UPDATE password_resets SET used = 1 WHERE token = ?
+        `).run(token);
+
+        expect(updateResult.changes).toBe(1);
+
+        const reset = testDb.prepare(
+          'SELECT * FROM password_resets WHERE token = ?'
+        ).get(token);
+
+        expect(reset.used).toBe(1);
+      });
+
+      it('should enforce unique token constraint', () => {
+        const token = 'duplicate_reset_token';
+        
+        testDb.prepare(`
+          INSERT INTO password_resets (id, user_id, token, expires)
+          VALUES (?, ?, ?, ?)
+        `).run(
+          'reset1',
+          testUserId,
+          token,
+          new Date(Date.now() + 3600000).toISOString()
+        );
+
+        expect(() => {
+          testDb.prepare(`
+            INSERT INTO password_resets (id, user_id, token, expires)
+            VALUES (?, ?, ?, ?)
+          `).run(
+            'reset2',
+            adminUserId,
+            token,
+            new Date(Date.now() + 3600000).toISOString()
+          );
+        }).toThrow(/UNIQUE constraint failed/);
+      });
+    });
+
+    describe('Verification Token Management', () => {
+      it('should create and retrieve verification tokens', () => {
+        const tokenData = {
+          identifier: 'authuser@example.com',
+          token: 'verification_token_abc123',
+          expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
+        };
+
+        const insertResult = testDb.prepare(`
+          INSERT INTO verification_tokens (identifier, token, expires)
+          VALUES (?, ?, ?)
+        `).run(
+          tokenData.identifier,
+          tokenData.token,
+          tokenData.expires
+        );
+
+        expect(insertResult.changes).toBe(1);
+
+        const retrievedToken = testDb.prepare(
+          'SELECT * FROM verification_tokens WHERE identifier = ?'
+        ).get(tokenData.identifier);
+
+        expect(retrievedToken).toBeDefined();
+        expect(retrievedToken.token).toBe(tokenData.token);
+      });
+
+      it('should enforce unique identifier + token constraint', () => {
+        const identifier = 'test@example.com';
+        const token = 'unique_verification_token';
+        
+        testDb.prepare(`
+          INSERT INTO verification_tokens (identifier, token, expires)
+          VALUES (?, ?, ?)
+        `).run(
+          identifier,
+          token,
+          new Date(Date.now() + 3600000).toISOString()
+        );
+
+        expect(() => {
+          testDb.prepare(`
+            INSERT INTO verification_tokens (identifier, token, expires)
+            VALUES (?, ?, ?)
+          `).run(
+            identifier,
+            token,
+            new Date(Date.now() + 3600000).toISOString()
+          );
+        }).toThrow(/UNIQUE constraint failed/);
+      });
+    });
+
+    describe('Authentication Foreign Key Constraints', () => {
+      it('should cascade delete accounts when user is deleted', () => {
+        // Create account for user
+        testDb.prepare(`
+          INSERT INTO accounts (id, user_id, type, provider, provider_account_id)
+          VALUES (?, ?, ?, ?, ?)
+        `).run('acc1', testUserId, 'oauth', 'google', 'google123');
+
+        let account = testDb.prepare(
+          'SELECT * FROM accounts WHERE user_id = ?'
+        ).get(testUserId);
+        expect(account).toBeDefined();
+
+        // Delete user
+        testDb.prepare('DELETE FROM users WHERE id = ?').run(testUserId);
+
+        // Account should be deleted
+        account = testDb.prepare(
+          'SELECT * FROM accounts WHERE user_id = ?'
+        ).get(testUserId);
+        expect(account).toBeUndefined();
+      });
+
+      it('should cascade delete sessions when user is deleted', () => {
+        // Create session for user
+        testDb.prepare(`
+          INSERT INTO sessions (id, session_token, user_id, expires)
+          VALUES (?, ?, ?, ?)
+        `).run(
+          'sess1',
+          'token123',
+          testUserId,
+          new Date(Date.now() + 3600000).toISOString()
+        );
+
+        let session = testDb.prepare(
+          'SELECT * FROM sessions WHERE user_id = ?'
+        ).get(testUserId);
+        expect(session).toBeDefined();
+
+        // Delete user
+        testDb.prepare('DELETE FROM users WHERE id = ?').run(testUserId);
+
+        // Session should be deleted
+        session = testDb.prepare(
+          'SELECT * FROM sessions WHERE user_id = ?'
+        ).get(testUserId);
+        expect(session).toBeUndefined();
+      });
+
+      it('should cascade delete user roles when user is deleted', () => {
+        // Create role for user
+        testDb.prepare(`
+          INSERT INTO user_roles (user_id, role, is_active)
+          VALUES (?, ?, ?)
+        `).run(testUserId, 'admin', 1);
+
+        let role = testDb.prepare(
+          'SELECT * FROM user_roles WHERE user_id = ?'
+        ).get(testUserId);
+        expect(role).toBeDefined();
+
+        // Delete user
+        testDb.prepare('DELETE FROM users WHERE id = ?').run(testUserId);
+
+        // Role should be deleted
+        role = testDb.prepare(
+          'SELECT * FROM user_roles WHERE user_id = ?'
+        ).get(testUserId);
+        expect(role).toBeUndefined();
+      });
+
+      it('should set null in security logs when user is deleted', () => {
+        // Create security log for user
+        testDb.prepare(`
+          INSERT INTO security_logs (user_id, action, success)
+          VALUES (?, ?, ?)
+        `).run(testUserId, 'test_action', 1);
+
+        let log = testDb.prepare(
+          'SELECT * FROM security_logs WHERE user_id = ?'
+        ).get(testUserId);
+        expect(log).toBeDefined();
+        expect(log.user_id).toBe(testUserId);
+
+        // Delete user
+        testDb.prepare('DELETE FROM users WHERE id = ?').run(testUserId);
+
+        // Log should still exist but user_id should be null
+        log = testDb.prepare(
+          'SELECT * FROM security_logs WHERE action = ?'
+        ).get('test_action');
+        expect(log).toBeDefined();
+        expect(log.user_id).toBeNull();
+      });
+
+      it('should cascade delete password resets when user is deleted', () => {
+        // Create password reset for user
+        testDb.prepare(`
+          INSERT INTO password_resets (id, user_id, token, expires)
+          VALUES (?, ?, ?, ?)
+        `).run(
+          'reset1',
+          testUserId,
+          'token123',
+          new Date(Date.now() + 3600000).toISOString()
+        );
+
+        let reset = testDb.prepare(
+          'SELECT * FROM password_resets WHERE user_id = ?'
+        ).get(testUserId);
+        expect(reset).toBeDefined();
+
+        // Delete user
+        testDb.prepare('DELETE FROM users WHERE id = ?').run(testUserId);
+
+        // Password reset should be deleted
+        reset = testDb.prepare(
+          'SELECT * FROM password_resets WHERE user_id = ?'
+        ).get(testUserId);
+        expect(reset).toBeUndefined();
       });
     });
   });

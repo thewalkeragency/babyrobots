@@ -10,7 +10,8 @@ import {
   GlobeAltIcon,
   FilmIcon,
   DocumentTextIcon,
-  CommandLineIcon
+  CommandLineIcon,
+  CircleStackIcon
 } from '@heroicons/react/24/outline';
 
 const CursorStyleDashboard = ({ userRole = 'artist', userId, currentUser }) => {
@@ -48,6 +49,7 @@ const CursorStyleDashboard = ({ userRole = 'artist', userId, currentUser }) => {
   const workspaces = [
     { id: 'tracks', name: 'Tracks', icon: 'music' },
     { id: 'projects', name: 'Projects', icon: 'folder' },
+    { id: 'database', name: 'Database', icon: 'database', badge: 'NEW' },
     { id: 'artwork', name: 'Artwork', icon: 'palette' },
     { id: 'marketing', name: 'Marketing', icon: 'trending-up' },
     { id: 'analytics', name: 'Analytics', icon: 'bar-chart' },
@@ -60,6 +62,7 @@ const CursorStyleDashboard = ({ userRole = 'artist', userId, currentUser }) => {
     switch (iconName) {
       case 'music': return <MusicalNoteIcon {...iconProps} />;
       case 'folder': return <FolderIcon {...iconProps} />;
+      case 'database': return <CircleStackIcon {...iconProps} />;
       case 'palette': return <PaintBrushIcon {...iconProps} />;
       case 'trending-up': return <ArrowTrendingUpIcon {...iconProps} />;
       case 'bar-chart': return <ChartBarIcon {...iconProps} />;
@@ -108,6 +111,11 @@ const CursorStyleDashboard = ({ userRole = 'artist', userId, currentUser }) => {
             >
               {getWorkspaceIcon(workspace.icon)}
               <span>{workspace.name}</span>
+              {workspace.badge && (
+                <Badge size="sm" variant="success" className="text-xs">
+                  {workspace.badge}
+                </Badge>
+              )}
             </button>
           ))}
         </div>
@@ -185,7 +193,8 @@ const CursorStyleDashboard = ({ userRole = 'artist', userId, currentUser }) => {
       </div>
 
       {/* Main Content Area */}
-      <div className="p-6">
+      <div className="flex-1 p-6">
+        <div className="w-full max-w-4xl mx-auto">
         {activeWorkspace === 'tracks' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -235,6 +244,178 @@ const CursorStyleDashboard = ({ userRole = 'artist', userId, currentUser }) => {
           </div>
         )}
 
+        {activeWorkspace === 'database' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="p-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-10 h-10 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-lg flex items-center justify-center">
+                    <CircleStackIcon className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold">Database Overview</h3>
+                    <Badge className="mt-1" variant="success">NEW</Badge>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Music & Content Management System showcasing the newly implemented database features.
+                </p>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <MusicalNoteIcon className="h-5 w-5 text-blue-500" />
+                      <span className="font-medium">Tracks Table</span>
+                    </div>
+                    <span className="text-sm text-gray-500">125 records</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <DocumentTextIcon className="h-5 w-5 text-green-500" />
+                      <span className="font-medium">Split Sheets</span>
+                    </div>
+                    <span className="text-sm text-gray-500">42 agreements</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <FolderIcon className="h-5 w-5 text-purple-500" />
+                      <span className="font-medium">Workspaces</span>
+                    </div>
+                    <span className="text-sm text-gray-500">8 active</span>
+                  </div>
+                </div>
+              </Card>
+              
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs font-semibold">+</span>
+                    </div>
+                    <div>
+                      <div className="font-medium text-sm">New track uploaded</div>
+                      <div className="text-xs text-gray-500">"Midnight Drive" added to database</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs font-semibold">✓</span>
+                    </div>
+                    <div>
+                      <div className="font-medium text-sm">Split sheet completed</div>
+                      <div className="text-xs text-gray-500">Revenue shares finalized</div>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          </div>
+        )}
+
+        {activeWorkspace === 'projects' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Active Projects</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-gradient-to-r from-orange-400 to-red-400 rounded-lg flex items-center justify-center">
+                        <span className="text-white font-semibold">EP</span>
+                      </div>
+                      <div>
+                        <div className="font-medium">Summer EP 2024</div>
+                        <div className="text-sm text-gray-500">4 tracks • In Progress</div>
+                      </div>
+                    </div>
+                    <Button size="sm" variant="outline">Open</Button>
+                  </div>
+                </div>
+              </Card>
+              
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Project Tools</h3>
+                <div className="space-y-3">
+                  <Button className="w-full justify-start" variant="outline">
+                    <FolderIcon className="h-4 w-4 mr-2" />
+                    Create New Project
+                  </Button>
+                  <Button className="w-full justify-start" variant="outline">
+                    <DocumentTextIcon className="h-4 w-4 mr-2" />
+                    Import Project
+                  </Button>
+                </div>
+              </Card>
+            </div>
+          </div>
+        )}
+
+        {activeWorkspace === 'marketing' && (
+          <div className="space-y-6">
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Marketing Campaigns</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Plan, execute, and track your marketing campaigns. Use AI to generate strategic insights and reach your target audience effectively.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div className="p-4 bg-gradient-to-r from-pink-50 to-purple-50 dark:from-pink-900/20 dark:to-purple-900/20 rounded-lg">
+                  <h4 className="font-medium mb-2">Social Media Campaign</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Promote new single across platforms</p>
+                  <div className="mt-2">
+                    <Badge variant="outline">Active</Badge>
+                  </div>
+                </div>
+                <div className="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg">
+                  <h4 className="font-medium mb-2">Email Marketing</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Fan engagement and updates</p>
+                  <div className="mt-2">
+                    <Badge variant="outline">Draft</Badge>
+                  </div>
+                </div>
+              </div>
+              <Button className="w-full" variant="primary">
+                <ArrowTrendingUpIcon className="h-4 w-4 mr-2" />
+                Plan New Campaign
+              </Button>
+            </Card>
+          </div>
+        )}
+
+        {activeWorkspace === 'analytics' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Streaming Stats</h3>
+                <div className="text-3xl font-bold text-blue-500 mb-2">12.5K</div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Total plays this month</p>
+              </Card>
+              
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Revenue</h3>
+                <div className="text-3xl font-bold text-green-500 mb-2">$892</div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Earnings this quarter</p>
+              </Card>
+              
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Engagement</h3>
+                <div className="text-3xl font-bold text-purple-500 mb-2">2.3K</div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">New followers</p>
+              </Card>
+            </div>
+            
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Analytics Overview</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Access detailed insights and visualize data on all aspects of your projects to make informed decisions. Customize dashboards to suit your analytical needs.
+              </p>
+              <Button variant="primary">
+                <ChartBarIcon className="h-4 w-4 mr-2" />
+                View Detailed Analytics
+              </Button>
+            </Card>
+          </div>
+        )}
+
         {activeWorkspace === 'artwork' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -251,6 +432,7 @@ const CursorStyleDashboard = ({ userRole = 'artist', userId, currentUser }) => {
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

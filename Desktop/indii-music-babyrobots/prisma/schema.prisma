@@ -1,0 +1,521 @@
+// This is your Prisma schema file
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int      @id @default(autoincrement())
+  email         String   @unique
+  passwordHash  String   @map("password_hash")
+  username      String?  @unique
+  firstName     String?  @map("first_name")
+  lastName      String?  @map("last_name")
+  profileType   ProfileType @map("profile_type")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Profile relationships
+  artistProfile         ArtistProfile?
+  fanProfile           FanProfile?
+  licensorProfile      LicensorProfile?
+  serviceProviderProfile ServiceProviderProfile?
+
+  // Authentication relationships
+  sessions             Session[]
+  accounts             Account[]
+  refreshTokens        RefreshToken[]
+  accessTokens         AccessToken[]
+  userRoles            UserRole[]
+  assignedRoles        UserRole[] @relation("RoleAssigner")
+  securityLogs         SecurityLog[]
+  passwordResets       PasswordReset[]
+  
+  // Other relationships
+  tracks               Track[]
+  audioFiles           AudioFile[]
+  projectWorkspaces    ProjectWorkspace[]
+  chatSessions         ChatSession[]
+  tasks                Task[]
+  assignedTasks        Task[] @relation("TaskAssignee")
+
+  @@map("users")
+}
+
+enum ProfileType {
+  artist
+  fan
+  licensor
+  service_provider
+}
+
+model ArtistProfile {
+  id             Int      @id @default(autoincrement())
+  userId         Int      @unique @map("user_id")
+  artistName     String   @map("artist_name")
+  bio            String?
+  genre          String?
+  location       String?
+  website        String?
+  spotifyUrl     String?  @map("spotify_url")
+  soundcloudUrl  String?  @map("soundcloud_url")
+  instagramUrl   String?  @map("instagram_url")
+  twitterUrl     String?  @map("twitter_url")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("artist_profiles")
+}
+
+model FanProfile {
+  id               Int      @id @default(autoincrement())
+  userId           Int      @unique @map("user_id")
+  displayName      String?  @map("display_name")
+  favoriteGenres   String?  @map("favorite_genres")
+  location         String?
+  bio              String?
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("fan_profiles")
+}
+
+model LicensorProfile {
+  id             Int      @id @default(autoincrement())
+  userId         Int      @unique @map("user_id")
+  companyName    String   @map("company_name")
+  contactPerson  String?  @map("contact_person")
+  industryFocus  String?  @map("industry_focus")
+  website        String?
+  phone          String?
+  address        String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("licensor_profiles")
+}
+
+model ServiceProviderProfile {
+  id            Int      @id @default(autoincrement())
+  userId        Int      @unique @map("user_id")
+  companyName   String   @map("company_name")
+  serviceType   String   @map("service_type")
+  description   String?
+  website       String?
+  contactEmail  String?  @map("contact_email")
+  phone         String?
+  pricingInfo   String?  @map("pricing_info")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("service_provider_profiles")
+}
+
+model Track {
+  id          Int      @id @default(autoincrement())
+  artistId    Int      @map("artist_id")
+  title       String
+  duration    Int?
+  genre       String?
+  mood        String?
+  bpm         Int?
+  keySignature String? @map("key_signature")
+  fileUrl     String?  @map("file_url")
+  artworkUrl  String?  @map("artwork_url")
+  description String?
+  tags        String?
+  isPublic    Boolean  @default(true) @map("is_public")
+  playCount   Int      @default(0) @map("play_count")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  artist     User        @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  splitSheets SplitSheet[]
+
+  @@map("tracks")
+}
+
+model SplitSheet {
+  id          Int      @id @default(autoincrement())
+  trackId     Int      @map("track_id")
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  track        Track                   @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  contributors SplitSheetContributor[]
+
+  @@map("split_sheets")
+}
+
+model SplitSheetContributor {
+  id            Int     @id @default(autoincrement())
+  splitSheetId  Int     @map("split_sheet_id")
+  name          String
+  role          String?
+  percentage    Float
+
+  splitSheet SplitSheet @relation(fields: [splitSheetId], references: [id], onDelete: Cascade)
+
+  @@map("split_sheet_contributors")
+}
+
+model ProjectWorkspace {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  name        String
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  files WorkspaceFile[]
+  tasks WorkspaceTask[]
+
+  @@map("project_workspaces")
+}
+
+model WorkspaceFile {
+  id          Int    @id @default(autoincrement())
+  workspaceId Int    @map("workspace_id")
+  filename    String
+  filePath    String @map("file_path")
+
+  workspace ProjectWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("workspace_files")
+}
+
+model WorkspaceTask {
+  id          Int       @id @default(autoincrement())
+  workspaceId Int       @map("workspace_id")
+  title       String
+  description String?
+  dueDate     DateTime? @map("due_date")
+  isCompleted Boolean   @default(false) @map("is_completed")
+
+  workspace ProjectWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("workspace_tasks")
+}
+
+model AudioFile {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @map("user_id")
+  filename     String
+  originalName String   @map("original_name")
+  filePath     String   @map("file_path")
+  fileSize     Int?
+  mimeType     String?  @map("mime_type")
+  duration     Int?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("audio_files")
+}
+
+model ChatSession {
+  id            Int      @id @default(autoincrement())
+  userId        Int?     @map("user_id")
+  sessionId     String   @unique @map("session_id")
+  role          String   @default("general")
+  createdAt     DateTime @default(now()) @map("created_at")
+  lastActivity  DateTime @default(now()) @map("last_activity")
+  contextJson   String?  @map("context_json")
+
+  user     User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  messages ChatMessage[]
+
+  @@map("chat_sessions")
+}
+
+model ChatMessage {
+  id        Int      @id @default(autoincrement())
+  sessionId String   @map("session_id")
+  message   String
+  response  String
+  role      String   @default("general")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  session ChatSession @relation(fields: [sessionId], references: [sessionId], onDelete: Cascade)
+
+  @@map("chat_messages")
+}
+
+// Authentication and Session Management Models
+model Account {
+  id                String  @id @default(cuid())
+  userId            Int     @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       Int      @map("user_id")
+  expires      DateTime
+  status       SessionStatus @default(active)
+  deviceInfo   String?  @map("device_info") // Browser/device information
+  ipAddress    String?  @map("ip_address")
+  location     String?  // Geolocation info
+  userAgent    String?  @map("user_agent")
+  lastActivity DateTime @default(now()) @map("last_activity")
+  isRevoked    Boolean  @default(false) @map("is_revoked")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshTokens RefreshToken[]
+
+  @@map("sessions")
+}
+
+model RefreshToken {
+  id          String   @id @default(cuid())
+  token       String   @unique
+  sessionId   String   @map("session_id")
+  userId      Int      @map("user_id")
+  expires     DateTime
+  isRevoked   Boolean  @default(false) @map("is_revoked")
+  rotatedFrom String?  @map("rotated_from") // Previous token ID for rotation tracking
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model AccessToken {
+  id        String    @id @default(cuid())
+  token     String    @unique
+  userId    Int       @map("user_id")
+  expires   DateTime
+  isRevoked Boolean   @default(false) @map("is_revoked")
+  scope     String?   // API access scope
+  purpose   TokenPurpose @default(api_access)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("access_tokens")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// User Role and Permission Management
+model Role {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique // admin, moderator, premium_user, artist, fan, licensor, service_provider
+  displayName String   @map("display_name")
+  description String?
+  isSystem    Boolean  @default(false) @map("is_system") // System roles cannot be deleted
+  parentRoleId Int?    @map("parent_role_id")
+  level       Int      @default(0) // Role hierarchy level
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Self-referencing relationship for role hierarchy
+  parentRole  Role?    @relation("RoleHierarchy", fields: [parentRoleId], references: [id])
+  childRoles  Role[]   @relation("RoleHierarchy")
+
+  // Relationships
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+  
+  @@map("roles")
+}
+
+model Permission {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique // create_track, edit_profile, manage_users, etc.
+  displayName String   @map("display_name")
+  description String?
+  resource    String   // tracks, profiles, users, admin, etc.
+  action      PermissionAction
+  scope       PermissionScope @default(own)
+  isSystem    Boolean  @default(false) @map("is_system")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  rolePermissions RolePermission[]
+  
+  @@unique([resource, action, scope])
+  @@map("permissions")
+}
+
+model RolePermission {
+  id           Int      @id @default(autoincrement())
+  roleId       Int      @map("role_id")
+  permissionId Int      @map("permission_id")
+  isGranted    Boolean  @default(true) @map("is_granted") // Allow explicit deny
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  roleId      Int      @map("role_id")
+  isActive    Boolean  @default(true) @map("is_active")
+  assignedBy  Int?     @map("assigned_by")
+  assignedAt  DateTime @default(now()) @map("assigned_at")
+  expiresAt   DateTime? @map("expires_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user           User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role           Role  @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  assignedByUser User? @relation("RoleAssigner", fields: [assignedBy], references: [id])
+
+  @@unique([userId, roleId])
+  @@map("user_roles")
+}
+
+enum PermissionAction {
+  CREATE
+  READ
+  UPDATE
+  DELETE
+  MANAGE
+  MODERATE
+  DOWNLOAD
+  UPLOAD
+  SHARE
+  COMMENT
+  RATE
+  REPORT
+}
+
+enum PermissionScope {
+  own        // User can only access their own resources
+  assigned   // User can access resources assigned to them
+  team       // User can access team/group resources
+  public     // User can access public resources
+  all        // User can access all resources (admin level)
+}
+
+// Security and Audit Models
+model SecurityLog {
+  id          Int      @id @default(autoincrement())
+  userId      Int?     @map("user_id")
+  action      String   // login, logout, password_change, role_change, etc.
+  ipAddress   String?  @map("ip_address")
+  userAgent   String?  @map("user_agent")
+  success     Boolean  @default(true)
+  details     Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("security_logs")
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  userId    Int      @map("user_id")
+  token     String   @unique
+  expires   DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_resets")
+}
+
+model Task {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  priority    TaskPriority @default(medium)
+  category    String    @default("general")
+  status      TaskStatus @default(pending)
+  dueDate     DateTime? @map("due_date")
+  completedAt DateTime? @map("completed_at")
+  assignedTo  Int?      @map("assigned_to")
+  userId      Int       @map("user_id")
+  projectId   Int?      @map("project_id")
+  tags        String?   // JSON string
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  user         User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignedUser User? @relation("TaskAssignee", fields: [assignedTo], references: [id], onDelete: SetNull)
+
+  @@map("tasks")
+}
+
+enum TaskPriority {
+  low
+  medium
+  high
+}
+
+enum TaskStatus {
+  pending
+  in_progress
+  completed
+  cancelled
+}
+
+enum SessionStatus {
+  active
+  inactive
+  expired
+  revoked
+  suspended
+}
+
+enum TokenPurpose {
+  api_access
+  password_reset
+  email_verification
+  two_factor_auth
+  service_auth
+}

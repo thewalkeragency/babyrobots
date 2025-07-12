@@ -1,8 +1,8 @@
-import { createLicensorProfile, getLicensorProfileByUserId, updateLicensorProfile, deleteLicensorProfile } from '../../lib/db';
+import { createLicensorProfile, getLicensorProfileByUserId, updateLicensorProfile, deleteLicensorProfile } from '../../src/lib/db';
 import handler from '../../pages/api/profile/licensor';
 
 // Mock the database functions
-jest.mock('../../lib/db', () => ({
+jest.mock('../../src/lib/db', () => ({
   __esModule: true,
   createLicensorProfile: jest.fn(),
   getLicensorProfileByUserId: jest.fn(),

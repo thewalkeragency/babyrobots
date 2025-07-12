@@ -57,6 +57,7 @@ const TrackForm = ({ artistId, trackId, onTrackSaved }) => {
             setIsEditing(false);
           } else {
             setMessage(`Error fetching track: ${data.message || 'Unknown error'}`);
+            setIsEditing(false);
           }
         } catch (error) {
           console.error('Error fetching track:', error);

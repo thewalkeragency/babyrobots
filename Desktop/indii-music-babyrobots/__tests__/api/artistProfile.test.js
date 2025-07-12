@@ -1,8 +1,8 @@
-import { createArtistProfile, getArtistProfileByUserId, updateArtistProfile, deleteArtistProfile } from '../../lib/db';
+import { createArtistProfile, getArtistProfileByUserId, updateArtistProfile, deleteArtistProfile } from '../../src/lib/db';
 import handler from '../../pages/api/profile/artist';
 
 // Mock the database functions
-jest.mock('../../lib/db', () => ({
+jest.mock('../../src/lib/db', () => ({
   __esModule: true,
   createArtistProfile: jest.fn(),
   getArtistProfileByUserId: jest.fn(),

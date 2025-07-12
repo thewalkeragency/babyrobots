@@ -221,6 +221,98 @@ function initializeDatabase() {
       )
     `);
 
+    // Authentication system tables
+    // OAuth accounts table
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS accounts (
+        id TEXT PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        type TEXT NOT NULL,
+        provider TEXT NOT NULL,
+        provider_account_id TEXT NOT NULL,
+        refresh_token TEXT,
+        access_token TEXT,
+        expires_at INTEGER,
+        token_type TEXT,
+        scope TEXT,
+        id_token TEXT,
+        session_state TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(provider, provider_account_id),
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      )
+    `);
+
+    // User sessions table
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS sessions (
+        id TEXT PRIMARY KEY,
+        session_token TEXT UNIQUE NOT NULL,
+        user_id INTEGER NOT NULL,
+        expires DATETIME NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      )
+    `);
+
+    // Verification tokens table
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS verification_tokens (
+        identifier TEXT NOT NULL,
+        token TEXT UNIQUE NOT NULL,
+        expires DATETIME NOT NULL,
+        UNIQUE(identifier, token)
+      )
+    `);
+
+    // User roles table
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS user_roles (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        role TEXT NOT NULL,
+        is_active BOOLEAN DEFAULT true,
+        assigned_by INTEGER,
+        assigned_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        expires_at DATETIME,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, role),
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+        FOREIGN KEY (assigned_by) REFERENCES users (id) ON DELETE SET NULL
+      )
+    `);
+
+    // Security logs table
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS security_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        action TEXT NOT NULL,
+        ip_address TEXT,
+        user_agent TEXT,
+        success BOOLEAN DEFAULT true,
+        details TEXT, -- JSON as TEXT in SQLite
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
+      )
+    `);
+
+    // Password resets table
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS password_resets (
+        id TEXT PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        token TEXT UNIQUE NOT NULL,
+        expires DATETIME NOT NULL,
+        used BOOLEAN DEFAULT false,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      )
+    `);
+
     console.log('Database initialized successfully');
   } catch (error) {
     console.error('Error initializing database:', error);
@@ -349,6 +441,269 @@ const db_helpers = {
     return stmt.get(userId);
   },
 
+  // Enhanced profile operations with full CRUD
+  
+  // Artist profile CRUD operations
+  updateArtistProfile: (userId, profileData) => {
+    const stmt = db.prepare(`
+      UPDATE artist_profiles 
+      SET artist_name = ?, bio = ?, genre = ?, location = ?, website = ?, 
+          spotify_url = ?, soundcloud_url = ?, instagram_url = ?, twitter_url = ?, 
+          updated_at = CURRENT_TIMESTAMP
+      WHERE user_id = ?
+    `);
+    return stmt.run(
+      profileData.artist_name,
+      profileData.bio,
+      profileData.genre,
+      profileData.location,
+      profileData.website,
+      profileData.spotify_url,
+      profileData.soundcloud_url,
+      profileData.instagram_url,
+      profileData.twitter_url,
+      userId
+    );
+  },
+
+  deleteArtistProfile: (userId) => {
+    const stmt = db.prepare('DELETE FROM artist_profiles WHERE user_id = ?');
+    return stmt.run(userId);
+  },
+
+  // Fan profile CRUD operations
+  updateFanProfile: (userId, profileData) => {
+    const stmt = db.prepare(`
+      UPDATE fan_profiles 
+      SET display_name = ?, favorite_genres = ?, location = ?, bio = ?, 
+          updated_at = CURRENT_TIMESTAMP
+      WHERE user_id = ?
+    `);
+    return stmt.run(
+      profileData.display_name,
+      profileData.favorite_genres,
+      profileData.location,
+      profileData.bio,
+      userId
+    );
+  },
+
+  deleteFanProfile: (userId) => {
+    const stmt = db.prepare('DELETE FROM fan_profiles WHERE user_id = ?');
+    return stmt.run(userId);
+  },
+
+  // Licensor profile CRUD operations
+  updateLicensorProfile: (userId, profileData) => {
+    const stmt = db.prepare(`
+      UPDATE licensor_profiles 
+      SET company_name = ?, contact_person = ?, industry_focus = ?, website = ?, 
+          phone = ?, address = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE user_id = ?
+    `);
+    return stmt.run(
+      profileData.company_name,
+      profileData.contact_person,
+      profileData.industry_focus,
+      profileData.website,
+      profileData.phone,
+      profileData.address,
+      userId
+    );
+  },
+
+  deleteLicensorProfile: (userId) => {
+    const stmt = db.prepare('DELETE FROM licensor_profiles WHERE user_id = ?');
+    return stmt.run(userId);
+  },
+
+  // Service provider profile CRUD operations
+  updateServiceProviderProfile: (userId, profileData) => {
+    const stmt = db.prepare(`
+      UPDATE service_provider_profiles 
+      SET company_name = ?, service_type = ?, description = ?, website = ?, 
+          contact_email = ?, phone = ?, pricing_info = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE user_id = ?
+    `);
+    return stmt.run(
+      profileData.company_name,
+      profileData.service_type,
+      profileData.description,
+      profileData.website,
+      profileData.contact_email,
+      profileData.phone,
+      profileData.pricing_info,
+      userId
+    );
+  },
+
+  deleteServiceProviderProfile: (userId) => {
+    const stmt = db.prepare('DELETE FROM service_provider_profiles WHERE user_id = ?');
+    return stmt.run(userId);
+  },
+
+  // Profile management and switching functions
+  getUserWithProfile: (userId) => {
+    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+    if (!user) return null;
+
+    let profile = null;
+    switch (user.profile_type) {
+      case 'artist':
+        profile = db.prepare('SELECT * FROM artist_profiles WHERE user_id = ?').get(userId);
+        break;
+      case 'fan':
+        profile = db.prepare('SELECT * FROM fan_profiles WHERE user_id = ?').get(userId);
+        break;
+      case 'licensor':
+        profile = db.prepare('SELECT * FROM licensor_profiles WHERE user_id = ?').get(userId);
+        break;
+      case 'service_provider':
+        profile = db.prepare('SELECT * FROM service_provider_profiles WHERE user_id = ?').get(userId);
+        break;
+    }
+
+    return {
+      ...user,
+      profile
+    };
+  },
+
+  updateUserProfileType: (userId, newProfileType) => {
+    const stmt = db.prepare('UPDATE users SET profile_type = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
+    return stmt.run(newProfileType, userId);
+  },
+
+  // Profile search and filtering functions
+  searchArtistProfiles: (searchTerm, limit = 20) => {
+    const stmt = db.prepare(`
+      SELECT ap.*, u.username, u.first_name, u.last_name 
+      FROM artist_profiles ap
+      JOIN users u ON ap.user_id = u.id
+      WHERE ap.artist_name LIKE ? OR ap.genre LIKE ? OR ap.bio LIKE ?
+      ORDER BY ap.updated_at DESC
+      LIMIT ?
+    `);
+    const term = `%${searchTerm}%`;
+    return stmt.all(term, term, term, limit);
+  },
+
+  searchFanProfiles: (searchTerm, limit = 20) => {
+    const stmt = db.prepare(`
+      SELECT fp.*, u.username, u.first_name, u.last_name 
+      FROM fan_profiles fp
+      JOIN users u ON fp.user_id = u.id
+      WHERE fp.display_name LIKE ? OR fp.favorite_genres LIKE ? OR fp.bio LIKE ?
+      ORDER BY fp.updated_at DESC
+      LIMIT ?
+    `);
+    const term = `%${searchTerm}%`;
+    return stmt.all(term, term, term, limit);
+  },
+
+  searchLicensorProfiles: (searchTerm, limit = 20) => {
+    const stmt = db.prepare(`
+      SELECT lp.*, u.username, u.first_name, u.last_name 
+      FROM licensor_profiles lp
+      JOIN users u ON lp.user_id = u.id
+      WHERE lp.company_name LIKE ? OR lp.industry_focus LIKE ? OR lp.contact_person LIKE ?
+      ORDER BY lp.updated_at DESC
+      LIMIT ?
+    `);
+    const term = `%${searchTerm}%`;
+    return stmt.all(term, term, term, limit);
+  },
+
+  searchServiceProviderProfiles: (searchTerm, limit = 20) => {
+    const stmt = db.prepare(`
+      SELECT spp.*, u.username, u.first_name, u.last_name 
+      FROM service_provider_profiles spp
+      JOIN users u ON spp.user_id = u.id
+      WHERE spp.company_name LIKE ? OR spp.service_type LIKE ? OR spp.description LIKE ?
+      ORDER BY spp.updated_at DESC
+      LIMIT ?
+    `);
+    const term = `%${searchTerm}%`;
+    return stmt.all(term, term, term, limit);
+  },
+
+  // Get profiles by type
+  getProfilesByType: (profileType, limit = 50) => {
+    switch (profileType) {
+      case 'artist':
+        const artistStmt = db.prepare(`
+          SELECT ap.*, u.username, u.first_name, u.last_name 
+          FROM artist_profiles ap
+          JOIN users u ON ap.user_id = u.id
+          ORDER BY ap.updated_at DESC
+          LIMIT ?
+        `);
+        return artistStmt.all(limit);
+      case 'fan':
+        const fanStmt = db.prepare(`
+          SELECT fp.*, u.username, u.first_name, u.last_name 
+          FROM fan_profiles fp
+          JOIN users u ON fp.user_id = u.id
+          ORDER BY fp.updated_at DESC
+          LIMIT ?
+        `);
+        return fanStmt.all(limit);
+      case 'licensor':
+        const licensorStmt = db.prepare(`
+          SELECT lp.*, u.username, u.first_name, u.last_name 
+          FROM licensor_profiles lp
+          JOIN users u ON lp.user_id = u.id
+          ORDER BY lp.updated_at DESC
+          LIMIT ?
+        `);
+        return licensorStmt.all(limit);
+      case 'service_provider':
+        const spStmt = db.prepare(`
+          SELECT spp.*, u.username, u.first_name, u.last_name 
+          FROM service_provider_profiles spp
+          JOIN users u ON spp.user_id = u.id
+          ORDER BY spp.updated_at DESC
+          LIMIT ?
+        `);
+        return spStmt.all(limit);
+      default:
+        return [];
+    }
+  },
+
+  // Profile validation functions
+  validateProfileData: (profileType, data) => {
+    const errors = [];
+    
+    switch (profileType) {
+      case 'artist':
+        if (!data.artist_name || data.artist_name.trim().length === 0) {
+          errors.push('Artist name is required');
+        }
+        break;
+      case 'fan':
+        if (!data.display_name || data.display_name.trim().length === 0) {
+          errors.push('Display name is required');
+        }
+        break;
+      case 'licensor':
+        if (!data.company_name || data.company_name.trim().length === 0) {
+          errors.push('Company name is required');
+        }
+        break;
+      case 'service_provider':
+        if (!data.company_name || data.company_name.trim().length === 0) {
+          errors.push('Company name is required');
+        }
+        if (!data.service_type || data.service_type.trim().length === 0) {
+          errors.push('Service type is required');
+        }
+        break;
+    }
+    
+    return errors;
+  },
+
   // Track operations
   createTrack: (trackData) => {
     const stmt = db.prepare(`
@@ -409,7 +764,7 @@ const db_helpers = {
 
   getChatSession: (sessionId) => {
     const stmt = db.prepare('SELECT * FROM chat_sessions WHERE session_id = ?');
-    return stmt.get(sessionId);
+    return stmt.get(sessionId) || null;
   },
 
   updateChatSessionActivity: (sessionId) => {

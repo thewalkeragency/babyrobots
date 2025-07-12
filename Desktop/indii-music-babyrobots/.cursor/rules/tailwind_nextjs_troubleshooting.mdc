@@ -1,0 +1,90 @@
+---
+persona: frontend_debugger
+scope: tailwind_nextjs
+version: 1.0.0
+last_updated: 2025-07-11
+---
+
+# Tailwind CSS + Next.js Troubleshooting Rules
+
+## Core Issue: Styles Not Applying in Next.js
+
+When Tailwind CSS styles are not showing up in a Next.js project (plain UI, white backgrounds, unstyled components), follow this systematic troubleshooting approach:
+
+### 1. Verify Tailwind Config Content Paths
+**Problem**: Most common issue - `tailwind.config.js` content paths don't match actual project structure
+**Solution**: 
+- Check actual folder structure with `ls -la` or file explorer
+- Update `content` array in `tailwind.config.js` to match real paths
+- Common corrections:
+  - `./src/pages` → `./pages` (if pages are in root)
+  - Add missing directories like `./components`, `./lib`, `./utils`
+  - Include all file extensions: `**/*.{js,ts,jsx,tsx,md,mdx}`
+
+### 2. Fix CSS Theme Function Calls
+**Problem**: Unresolved `theme()` function calls in global CSS
+**Solution**:
+- Replace `theme('colors.primary')` with actual hex values
+- Or ensure theme values are properly defined in config
+- Check for unknown utility classes like `font-sans` without proper theme setup
+
+### 3. Verify CSS Import Chain
+**Problem**: Global CSS not properly imported
+**Solution**:
+- Ensure `globals.css` is imported in `_app.js` or `_app.tsx`
+- Check import path is correct relative to file structure
+- Verify no typos in import statements
+
+### 4. Clear Port Conflicts
+**Problem**: Development server conflicts on port
+**Solution**:
+- Kill processes: `lsof -ti:9000 | xargs kill -9`
+- Restart dev server: `npm run dev` or `yarn dev`
+- Verify clean startup without errors
+
+### 5. Force Tailwind Rebuild
+**Problem**: Cached or stale build artifacts
+**Solution**:
+- Delete `.next` directory: `rm -rf .next`
+- Clear node_modules if necessary: `rm -rf node_modules && npm install`
+- Hard refresh browser (Cmd+Shift+R on Mac)
+
+## Prevention Checklist
+
+- [ ] Content paths in `tailwind.config.js` match actual project structure
+- [ ] All CSS files properly imported in Next.js app
+- [ ] No unresolved theme() calls in CSS
+- [ ] Development server running on correct port without conflicts
+- [ ] Browser cache cleared after config changes
+
+## Quick Diagnostic Commands
+
+```bash
+# Check current project structure
+find . -name "*.js" -o -name "*.jsx" -o -name "*.ts" -o -name "*.tsx" | head -20
+
+# Verify tailwind config content paths
+cat tailwind.config.js | grep -A 10 content
+
+# Check what's running on port
+lsof -i :9000
+
+# Restart clean dev server
+rm -rf .next && npm run dev
+```
+
+## When to Apply This Rule
+
+- Tailwind styles not showing in Next.js
+- UI appears unstyled or with default browser styles
+- Custom themes/colors not applying
+- After updating Tailwind or Next.js versions
+- When cloning or setting up existing projects
+
+## Success Indicators
+
+- Styled components render with intended colors/spacing
+- Custom theme values apply correctly
+- Hover states and animations work
+- Responsive breakpoints function
+- Console shows no CSS-related errors

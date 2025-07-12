@@ -1,25 +1,45 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import RegisterForm from '../../src/components/RegisterForm';
 import LoginForm from '../../src/components/LoginForm';
+import { AuthProvider } from '../../src/contexts/AuthContext';
 
-// Mock the fetch API
-global.fetch = jest.fn(() =>
-  Promise.resolve({
-    ok: true,
-    json: () => Promise.resolve({ message: 'Success!' }),
-  })
-);
+// Mock the auth service
+jest.mock('../../src/lib/auth-service.js', () => ({
+  authService: {
+    register: jest.fn(),
+    signIn: jest.fn(),
+    signOut: jest.fn(),
+    getCurrentUser: jest.fn(),
+  },
+}));
+
+// Mock fetch for any remaining direct API calls
+global.fetch = jest.fn();
+
+// Helper to render components with AuthProvider
+const renderWithAuth = (component) => {
+  return render(
+    <AuthProvider>
+      {component}
+    </AuthProvider>
+  );
+};
 
 describe('Auth Forms', () => {
   beforeEach(() => {
     fetch.mockClear();
+    // Default mock for session check
+    fetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ success: false, authenticated: false }),
+    });
   });
 
   describe('RegisterForm', () => {
     it('renders the registration form correctly', () => {
-      render(<RegisterForm />);
+      renderWithAuth(<RegisterForm />);
       expect(screen.getByRole('heading', { name: /Register/i, level: 2 })).toBeInTheDocument();
       expect(screen.getByLabelText(/Email:/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/Password:/i)).toBeInTheDocument();
@@ -27,7 +47,22 @@ describe('Auth Forms', () => {
     });
 
     it('handles successful registration', async () => {
-      render(<RegisterForm />);
+      // First call is for session check
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ success: false, authenticated: false }),
+      });
+      // Second call is for registration
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ 
+          success: true, 
+          message: 'Registration successful',
+          user: { id: 'uuid-123', email: 'test@example.com', role: 'fan' }
+        }),
+      });
+
+      renderWithAuth(<RegisterForm />);
       await userEvent.type(screen.getByLabelText(/Email:/i), 'test@example.com');
       await userEvent.type(screen.getByLabelText(/Password:/i), 'password123');
       await userEvent.selectOptions(screen.getByLabelText(/Role:/i), 'fan');
@@ -35,9 +70,8 @@ describe('Auth Forms', () => {
       await fireEvent.click(screen.getByRole('button', { name: /Register/i }));
 
       await waitFor(() => {
-        expect(fetch).toHaveBeenCalledTimes(1);
         expect(fetch).toHaveBeenCalledWith(
-          '/api/auth/register',
+          '/api/auth/signup',
           expect.objectContaining({
             method: 'POST',
             body: JSON.stringify({ email: 'test@example.com', password: 'password123', role: 'fan' }),
@@ -48,14 +82,21 @@ describe('Auth Forms', () => {
     });
 
     it('handles failed registration', async () => {
-      fetch.mockImplementationOnce(() =>
-        Promise.resolve({
-          ok: false,
-          json: () => Promise.resolve({ message: 'User already exists' }),
-        })
-      );
+      // First call is for session check
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ success: false, authenticated: false }),
+      });
+      // Second call is for registration
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ 
+          success: false, 
+          message: 'User already exists' 
+        }),
+      });
 
-      render(<RegisterForm />);
+      renderWithAuth(<RegisterForm />);
       await userEvent.type(screen.getByLabelText(/Email:/i), 'test@example.com');
       await userEvent.type(screen.getByLabelText(/Password:/i), 'password123');
 
@@ -69,21 +110,35 @@ describe('Auth Forms', () => {
 
   describe('LoginForm', () => {
     it('renders the login form correctly', () => {
-      render(<LoginForm />);
+      renderWithAuth(<LoginForm />);
       expect(screen.getByRole('heading', { name: /Login/i, level: 2 })).toBeInTheDocument();
       expect(screen.getByLabelText(/Email:/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/Password:/i)).toBeInTheDocument();
     });
 
     it('handles successful login', async () => {
-      render(<LoginForm />);
+      // First call is for session check
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ success: false, authenticated: false }),
+      });
+      // Second call is for login
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ 
+          success: true, 
+          message: 'Login successful',
+          user: { id: 'uuid-123', email: 'test@example.com', role: 'artist' }
+        }),
+      });
+
+      renderWithAuth(<LoginForm />);
       await userEvent.type(screen.getByLabelText(/Email:/i), 'test@example.com');
       await userEvent.type(screen.getByLabelText(/Password:/i), 'password123');
 
       await fireEvent.click(screen.getByRole('button', { name: /Login/i }));
 
       await waitFor(() => {
-        expect(fetch).toHaveBeenCalledTimes(1);
         expect(fetch).toHaveBeenCalledWith(
           '/api/auth/login',
           expect.objectContaining({
@@ -96,14 +151,21 @@ describe('Auth Forms', () => {
     });
 
     it('handles failed login', async () => {
-      fetch.mockImplementationOnce(() =>
-        Promise.resolve({
-          ok: false,
-          json: () => Promise.resolve({ message: 'Invalid credentials.' }),
-        })
-      );
+      // First call is for session check
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ success: false, authenticated: false }),
+      });
+      // Second call is for login
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ 
+          success: false, 
+          message: 'Invalid credentials.' 
+        }),
+      });
 
-      render(<LoginForm />);
+      renderWithAuth(<LoginForm />);
       await userEvent.type(screen.getByLabelText(/Email:/i), 'test@example.com');
       await userEvent.type(screen.getByLabelText(/Password:/i), 'wrongpassword');
 

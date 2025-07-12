@@ -1,18 +1,29 @@
-import { createFanProfile, getFanProfileByUserId, updateFanProfile, deleteFanProfile } from '../../lib/db';
-import handler from '../../pages/api/profile/fan';
+import { jest } from '@jest/globals';
 
 // Mock the database functions
-jest.mock('../../lib/db', () => ({
-  __esModule: true,
+const mockDbFunctions = {
   createFanProfile: jest.fn(),
   getFanProfileByUserId: jest.fn(),
   updateFanProfile: jest.fn(),
-  deleteFanProfile: jest.fn(),
-}));
+  deleteFanProfile: jest.fn()
+};
+
+jest.mock('@/lib/db', () => mockDbFunctions);
+
+// Import handler after mocking
+let handler;
+
+const { createFanProfile, getFanProfileByUserId, updateFanProfile, deleteFanProfile } = mockDbFunctions;
 
 describe('Fan Profile API', () => {
   let req;
   let res;
+
+  beforeAll(async () => {
+    // Import handler after mocking
+    const module = await import('../../pages/api/profile/fan.js');
+    handler = module.default;
+  });
 
   beforeEach(() => {
     jest.clearAllMocks();

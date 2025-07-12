@@ -7,7 +7,16 @@ export const ThemeToggle = ({
   className,
   ...props 
 }) => {
-  const { theme, toggleTheme, isDark } = useTheme();
+  const { theme, toggleTheme, isDark, mounted } = useTheme();
+
+  // Don't render anything during SSR to prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <div className={clsx('h-5 w-5', className)} {...props}>
+        {/* Placeholder during SSR */}
+      </div>
+    );
+  }
 
   if (variant === 'switch') {
     return (
@@ -98,7 +107,16 @@ export const ThemeToggle = ({
 };
 
 export const ThemeSelector = ({ className }) => {
-  const { theme, setLightTheme, setDarkTheme, setSystemTheme } = useTheme();
+  const { theme, setLightTheme, setDarkTheme, setSystemTheme, mounted } = useTheme();
+
+  // Don't render anything during SSR to prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <div className={clsx('flex space-x-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-lg', className)}>
+        {/* Placeholder during SSR */}
+      </div>
+    );
+  }
 
   const options = [
     { value: 'light', label: 'Light', icon: '☀️' },
@@ -118,7 +136,7 @@ export const ThemeSelector = ({ className }) => {
           }}
           className={clsx(
             'flex items-center space-x-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200',
-            theme === option.value || (option.value === 'system' && !localStorage.getItem('theme'))
+            theme === option.value || (option.value === 'system' && typeof window !== 'undefined' && !localStorage.getItem('theme'))
               ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm'
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
           )}

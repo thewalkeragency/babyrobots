@@ -1,0 +1,175 @@
+---
+persona: project_manager
+scope: task_management
+version: 1.0.0
+last_updated: 2025-07-11
+---
+
+# 📋 Task Management System Rules
+
+## System Overview
+The indii-music project uses a hierarchical task management system with two master to-do lists that spawn focused sub-tasks.
+
+## Master To-Do Lists Structure
+
+### 1. Primary Master Lists
+- **TODO.md** - Main development roadmap with general features and priorities
+- **TODO_DB.md** - Comprehensive project to-do list using "Tree Ring System" approach with mandatory testing protocols
+
+### 2. Focused Sub-Lists Pattern
+- **Format**: `my_current_task_[name].md`
+- **Purpose**: Specific task breakdowns derived from master lists
+- **Examples**:
+  - `my_current_task_database.md` (Database Infrastructure & Authentication)
+  - `my_current_task_profiles.md` (User Profile System)
+  - `my_current_task_agent_improvements.md` (AI Agent Enhancements)
+  - `my_current_task.md` (General current task)
+
+## Tree Ring System Approach
+
+### Ring Progression Structure
+- **CORE**: Foundation layer (must be solid before proceeding)
+- **RING 1**: First expansion layer
+- **RING 2**: Second expansion layer
+- **RING 3**: Third expansion layer
+- **RING 4**: Integration and finalization layer
+
+### Advancement Rules
+- No advancement to next ring until current ring is 100% complete
+- Each ring has mandatory testing gates
+- Testing must pass before ring progression
+
+## Mandatory Testing Protocol
+
+### Testing Requirements for Each Task
+1. **Unit Tests** - Test specific functionality
+2. **Integration Tests** - Test interaction with existing features
+3. **User Acceptance Tests** - Test from user perspective
+4. **Performance Tests** - Ensure no performance degradation
+5. **Security Tests** - Verify no security vulnerabilities
+6. **Documentation Tests** - Ensure documentation accuracy
+
+### Task Completion Criteria
+- [ ] Feature/functionality implemented
+- [ ] All tests written and passing
+- [ ] Code reviewed and approved
+- [ ] Documentation updated
+- [ ] Performance benchmarks met
+- [ ] Security scan passed
+- [ ] User acceptance criteria met
+
+## Integration Focus Requirements
+
+### Each Current Task Must Include
+- **Integration Points**: How it connects with other current work
+- **Support Relationships**: What it enables or depends on
+- **Time Estimates**: Realistic completion timeframes
+- **Expected Outcomes**: Clear deliverables and success metrics
+
+## File Naming Conventions
+
+### Master Lists
+- Use descriptive names ending in .md
+- Keep in project root directory
+- Examples: `TODO.md`, `TODO_DB.md`
+
+### Current Task Files
+- Format: `my_current_task_[descriptive_name].md`
+- Use lowercase with underscores
+- Be specific about the task focus area
+
+## Status Tracking System
+
+### Checkbox States
+- [ ] Not started
+- [x] Completed with full testing validation
+
+### Color Coding (when applicable)
+- 🔴 **Red State**: Feature unreliable/incomplete
+- 🟡 **Yellow State**: Feature works but lacks comprehensive testing
+- 🟢 **Green State**: Feature implemented, tested, and production-ready
+
+## Working with the System
+
+### When Starting New Work
+1. Review both master to-do lists
+2. Identify which items align with current priorities
+3. Create focused `my_current_task_[name].md` file
+4. Break down using Tree Ring System
+5. Include mandatory testing requirements
+6. Define integration points with existing work
+
+### When Updating Progress
+1. Update checkboxes in current task files
+2. Ensure testing requirements are met before checking off
+3. Update integration status with other current tasks
+4. Reflect changes back to master lists when appropriate
+
+### When Completing Tasks
+1. Verify all testing criteria met
+2. Update master to-do lists
+3. Archive or retire the current task file
+4. Document lessons learned and integration outcomes
+
+## Quality Gates
+
+### Before Ring Advancement
+- All tasks in current ring must be completed
+- All tests must pass
+- Integration points must be verified
+- Documentation must be updated
+
+### Before Task Completion
+- All rings must be completed
+- Full integration testing with other systems
+- Performance and security validation
+- User acceptance confirmation
+
+## AI Agent Guidelines
+
+### When Analyzing Tasks
+- Always check current task files before master lists
+- Understand integration relationships between current tasks
+- Respect the Tree Ring progression requirements
+- Never skip testing requirements
+
+### When Suggesting Work
+- Align suggestions with current task priorities
+- Consider integration impact on other current work
+- Provide realistic time estimates
+- Include testing requirements in proposals
+
+### When Implementing Features
+- Follow the established ring progression
+- Implement required testing at each stage
+- Update documentation throughout process
+- Validate integration points continuously
+
+## Success Metrics
+
+### System Effectiveness Indicators
+- Clear progression through rings
+- Consistent testing compliance
+- Successful integration between current tasks
+- Realistic time estimation accuracy
+- Quality deliverables that pass all gates
+
+### Warning Signs
+- Skipping testing requirements
+- Advancing rings without completion
+- Ignoring integration dependencies
+- Missing documentation updates
+- Unrealistic time estimates
+
+---
+
+## Implementation Notes
+
+This system ensures:
+- **Accountability**: Through mandatory testing protocols
+- **Quality**: Through ring progression gates
+- **Integration**: Through explicit relationship mapping
+- **Progress**: Through clear status tracking
+- **Sustainability**: Through comprehensive documentation
+
+Follow this system to maintain project quality and ensure all work contributes effectively to the overall indii-music platform development.

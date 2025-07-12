@@ -1,14 +1,16 @@
 module.exports = {
   content: [
+    './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        // Brand colors with dark mode variants
+        // Music Industry Color Palette - Dark theme primary with electric blues
         primary: {
           50: '#f0f9ff',
           100: '#e0f2fe', 
@@ -20,6 +22,53 @@ module.exports = {
           700: '#0369a1',
           800: '#075985',
           900: '#0c4a6e',
+        },
+        // Electric Blues - Indii.Music brand colors
+        electric: {
+          50: '#f0fdff',
+          100: '#ccfbff',
+          200: '#99f6ff',
+          300: '#66f0ff',
+          400: '#00d4ff', // Primary electric blue
+          500: '#0066cc', // Deep electric blue
+          600: '#003d7a', // Dark electric blue
+          700: '#002952',
+          800: '#001a33',
+          900: '#000d1a',
+        },
+        // Audio Industry Colors
+        audio: {
+          levels: '#00ff88',    // Green for audio levels
+          warning: '#ff6b35',   // Orange for warnings
+          peak: '#ff1744',      // Red for peaks
+          highlight: '#ffd700', // Gold for highlights
+          spectrum: '#9c27b0',  // Purple for spectrum
+        },
+        // Professional Grays
+        technical: {
+          50: '#fafafa',
+          100: '#f5f5f5',
+          200: '#e5e5e5',
+          300: '#d4d4d4',
+          400: '#a3a3a3',
+          500: '#737373',
+          600: '#525252',
+          700: '#404040',
+          800: '#262626',
+          900: '#171717',
+        },
+        // Deep blacks for music industry aesthetic
+        studio: {
+          50: '#f8f8f8',
+          100: '#f0f0f0',
+          200: '#e0e0e0',
+          300: '#c0c0c0',
+          400: '#808080',
+          500: '#404040',
+          600: '#2a2a2a',
+          700: '#1a1a1a',
+          800: '#0f0f0f',
+          900: '#0a0a0a',
         },
         // User role colors with enhanced accessibility
         artist: {

@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { getChatSession, createChatMessage } from '../../../../lib/db'; // Adjusted path
+const { getChatSession, createChatMessage } = require('../../../src/lib/db-adapter');
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
@@ -16,7 +16,7 @@ export default async function handler(req, res) {
     }
 
     const genAI = new GoogleGenerativeAI(API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const chat = model.startChat({
       history: history || [],

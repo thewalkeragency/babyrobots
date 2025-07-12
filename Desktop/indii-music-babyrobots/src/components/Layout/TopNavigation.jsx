@@ -1,5 +1,5 @@
 import React from 'react';
-import { ThemeToggle } from '../UI/ThemeToggle';
+import { ThemeToggle } from '../ui/ThemeToggle';
 import { Avatar, Badge } from '../UI';
 import { clsx } from 'clsx';
 

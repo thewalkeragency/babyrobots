@@ -16,17 +16,19 @@ export const ThemeProvider = ({ children }) => {
 
   // Handle theme initialization and persistence
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    const initialTheme = savedTheme || systemTheme;
-    
-    setTheme(initialTheme);
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('theme');
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      const initialTheme = savedTheme || systemTheme;
+      
+      setTheme(initialTheme);
+    }
     setMounted(true);
   }, []);
 
   // Apply theme changes to document
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted || typeof window === 'undefined') return;
 
     const root = document.documentElement;
     
@@ -44,6 +46,8 @@ export const ThemeProvider = ({ children }) => {
 
   // Listen for system theme changes
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     
     const handleChange = (e) => {
@@ -64,15 +68,12 @@ export const ThemeProvider = ({ children }) => {
   const setLightTheme = () => setTheme('light');
   const setDarkTheme = () => setTheme('dark');
   const setSystemTheme = () => {
-    localStorage.removeItem('theme');
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    setTheme(systemTheme);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('theme');
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      setTheme(systemTheme);
+    }
   };
-
-  // Prevent hydration mismatch
-  if (!mounted) {
-    return <div style={{ visibility: 'hidden' }}>{children}</div>;
-  }
 
   const value = {
     theme,
@@ -82,6 +83,7 @@ export const ThemeProvider = ({ children }) => {
     setSystemTheme,
     isDark: theme === 'dark',
     isLight: theme === 'light',
+    mounted
   };
 
   return (

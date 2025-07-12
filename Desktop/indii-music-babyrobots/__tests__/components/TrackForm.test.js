@@ -29,32 +29,34 @@ describe('TrackForm', () => {
 
   it('renders the edit track form correctly when track exists', async () => {
     // Mock fetch to return an existing track for the initial GET request
-    fetch.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: async () => ({
-        id: 101,
-        artist_id: 1,
-        title: 'Existing Song',
-        album_title: 'Existing Album',
-        genre: 'Rock',
-        mood_tags: '["energetic","upbeat"]',
-        instrumentation: '["guitar","drums"]',
-        tempo_bpm: 120,
-        key_signature: 'C Major',
-        duration_seconds: 180,
-        isrc: 'US-XXXXX-YY-ZZZZZ',
-        iswc: 'T-000.000.000-0',
-        explicit_content: true,
-        language: 'English',
-        release_date: '2023-01-01',
-        original_release_date: '2022-12-01',
-        copyright_holder: 'Artist Name',
-        ai_tags: '["ai-generated","test-tag"]',
-        file_url: 'http://example.com/existing.mp3',
-        cover_art_url: 'http://example.com/existing.jpg',
-      }),
-    });
+    fetch.mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({
+          id: 101,
+          artist_id: 1,
+          title: 'Existing Song',
+          album_title: 'Existing Album',
+          genre: 'Rock',
+          mood_tags: '["energetic","upbeat"]',
+          instrumentation: '["guitar","drums"]',
+          tempo_bpm: 120,
+          key_signature: 'C Major',
+          duration_seconds: 180,
+          isrc: 'US-XXXXX-YY-ZZZZZ',
+          iswc: 'T-000.000.000-0',
+          explicit_content: true,
+          language: 'English',
+          release_date: '2023-01-01',
+          original_release_date: '2022-12-01',
+          copyright_holder: 'Artist Name',
+          ai_tags: '["ai-generated","test-tag"]',
+          file_url: 'http://example.com/existing.mp3',
+          cover_art_url: 'http://example.com/existing.jpg',
+        })
+      })
+    );
 
     await act(async () => {
       render(<TrackForm artistId={1} trackId={101} />);
@@ -134,32 +136,34 @@ describe('TrackForm', () => {
 
   it('handles track update successfully', async () => {
     // Mock fetch to return an existing track for GET, then success for PUT
-    fetch.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: async () => ({
-        id: 101,
-        artist_id: 1,
-        title: 'Existing Song',
-        album_title: 'Existing Album',
-        genre: 'Rock',
-        mood_tags: '["energetic","upbeat"]',
-        instrumentation: '["guitar","drums"]',
-        tempo_bpm: 120,
-        key_signature: 'C Major',
-        duration_seconds: 180,
-        isrc: 'US-XXXXX-YY-ZZZZZ',
-        iswc: 'T-000.000.000-0',
-        explicit_content: true,
-        language: 'English',
-        release_date: '2023-01-01',
-        original_release_date: '2022-12-01',
-        copyright_holder: 'Artist Name',
-        ai_tags: '["ai-generated","test-tag"]',
-        file_url: 'http://example.com/existing.mp3',
-        cover_art_url: 'http://example.com/existing.jpg',
-      }),
-    });
+    fetch.mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({
+          id: 101,
+          artist_id: 1,
+          title: 'Existing Song',
+          album_title: 'Existing Album',
+          genre: 'Rock',
+          mood_tags: '["energetic","upbeat"]',
+          instrumentation: '["guitar","drums"]',
+          tempo_bpm: 120,
+          key_signature: 'C Major',
+          duration_seconds: 180,
+          isrc: 'US-XXXXX-YY-ZZZZZ',
+          iswc: 'T-000.000.000-0',
+          explicit_content: true,
+          language: 'English',
+          release_date: '2023-01-01',
+          original_release_date: '2022-12-01',
+          copyright_holder: 'Artist Name',
+          ai_tags: '["ai-generated","test-tag"]',
+          file_url: 'http://example.com/existing.mp3',
+          cover_art_url: 'http://example.com/existing.jpg',
+        })
+      })
+    );
     fetch.mockResolvedValueOnce({
       ok: true,
       status: 200,

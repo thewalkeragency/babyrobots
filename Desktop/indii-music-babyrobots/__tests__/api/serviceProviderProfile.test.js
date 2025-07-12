@@ -1,8 +1,8 @@
-import { createServiceProviderProfile, getServiceProviderProfileByUserId, updateServiceProviderProfile, deleteServiceProviderProfile } from '../../lib/db';
+import { createServiceProviderProfile, getServiceProviderProfileByUserId, updateServiceProviderProfile, deleteServiceProviderProfile } from '../../src/lib/db';
 import handler from '../../pages/api/profile/serviceProvider';
 
 // Mock the database functions
-jest.mock('../../lib/db', () => ({
+jest.mock('../../src/lib/db', () => ({
   __esModule: true,
   createServiceProviderProfile: jest.fn(),
   getServiceProviderProfileByUserId: jest.fn(),

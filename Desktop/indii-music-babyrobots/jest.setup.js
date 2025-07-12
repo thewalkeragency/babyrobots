@@ -31,3 +31,25 @@ Object.defineProperty(global, 'fetch', {
   writable: true,
   value: jest.fn(),
 });
+
+// Mock Supabase to prevent ESM loading issues
+jest.mock('@supabase/supabase-js', () => ({
+  createClient: jest.fn(() => ({
+    auth: {
+      getUser: jest.fn(),
+      signIn: jest.fn(),
+      signOut: jest.fn(),
+    },
+    from: jest.fn(() => ({
+      select: jest.fn(),
+      insert: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    })),
+  })),
+}));
+
+// Mock isows to prevent ESM issues
+jest.mock('isows', () => ({
+  WebSocket: global.WebSocket || jest.fn(),
+}));

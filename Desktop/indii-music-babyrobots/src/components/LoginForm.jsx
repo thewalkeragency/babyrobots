@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
-const LoginForm = () => {
+const LoginForm = ({ onSuccess, onError }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setMessage('');
+    setIsLoading(true);
 
     try {
       const response = await fetch('/api/auth/login', {
@@ -20,15 +23,39 @@ const LoginForm = () => {
 
       const data = await response.json();
 
-      if (response.ok) {
+      if (response.ok && data.success) {
         setMessage(`Login successful: ${data.message}`);
-        // In a real app, you'd store the user token/session here
+        
+        // Call success callback with user data
+        if (onSuccess) {
+          onSuccess({
+            user: data.user,
+            profile: data.profile,
+            needsProfileSetup: data.needsProfileSetup
+          });
+        }
+        
+        // Clear form
+        setEmail('');
+        setPassword('');
       } else {
-        setMessage(`Login failed: ${data.message || 'Unknown error'}`);
+        const errorMessage = data.message || 'Login failed';
+        setMessage(`Login failed: ${errorMessage}`);
+        
+        if (onError) {
+          onError(errorMessage);
+        }
       }
     } catch (error) {
       console.error('Error during login:', error);
-      setMessage('Error during login. Please try again.');
+      const errorMessage = 'Error during login. Please try again.';
+      setMessage(errorMessage);
+      
+      if (onError) {
+        onError(errorMessage);
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -58,8 +85,20 @@ const LoginForm = () => {
             style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
           />
         </div>
-        <button type="submit" style={{ width: '100%', padding: '10px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-          Login
+        <button 
+          type="submit" 
+          disabled={isLoading}
+          style={{ 
+            width: '100%', 
+            padding: '10px', 
+            backgroundColor: isLoading ? '#6c757d' : '#28a745', 
+            color: 'white', 
+            border: 'none', 
+            borderRadius: '5px', 
+            cursor: isLoading ? 'not-allowed' : 'pointer' 
+          }}
+        >
+          {isLoading ? 'Signing in...' : 'Login'}
         </button>
       </form>
       {message && <p style={{ marginTop: '10px', color: message.includes('successful') ? 'green' : 'red' }}>{message}</p>}

@@ -2,27 +2,38 @@ import handler from '../../pages/api/ai/chat';
 import path from 'path';
 import fs from 'fs';
 
-// --- Test Database Setup for lib/db when imported by chat.js ---
-const TEST_DB_DIR_CHAT_API = path.join(__dirname, 'test_chat_api_db_data');
-const ACTUAL_DB_PATH_CHAT_API = path.join(TEST_DB_DIR_CHAT_API, 'indii-music.chat.api.db'); // Unique name
-
 // Store original process.cwd to restore it
 const originalProcessCwd = process.cwd;
 
+// Mock the underlying lib/db that db-adapter uses
 jest.mock('../../lib/db', () => {
   const fsActual = require('fs');
-  // TEST_DB_DIR_CHAT_API is from the outer scope. This is generally safe in Jest
-  // as the factory function's closure can access variables from its defining module scope.
+  const pathActual = require('path');
+  
+  // Define paths within the mock to avoid hoisting issues
+  const TEST_DB_DIR_CHAT_API = pathActual.join(__dirname, 'test_chat_api_db_data');
+  
   if (!fsActual.existsSync(TEST_DB_DIR_CHAT_API)) {
     fsActual.mkdirSync(TEST_DB_DIR_CHAT_API, { recursive: true });
   }
 
+  const originalCwd = process.cwd;
   process.cwd = () => TEST_DB_DIR_CHAT_API;
   const actualDbModule = jest.requireActual('../../lib/db');
-  process.cwd = originalProcessCwd;
+  process.cwd = originalCwd;
 
   return actualDbModule;
 });
+
+// Ensure db-adapter uses the mocked database
+jest.mock('../../src/lib/db-adapter', () => {
+  const mockDb = jest.requireMock('../../lib/db');
+  return mockDb;
+});
+
+// --- Test Database Setup paths ---
+const TEST_DB_DIR_CHAT_API = path.join(__dirname, 'test_chat_api_db_data');
+const ACTUAL_DB_PATH_CHAT_API = path.join(TEST_DB_DIR_CHAT_API, 'indii-music.db'); // Use the standard filename
 
 const { db, createUser, createChatSession, getChatHistory, getChatSession: getChatSessionForTest } = require('../../lib/db');
 
