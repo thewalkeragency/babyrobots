@@ -16,7 +16,12 @@
     "db:studio": "prisma studio",
     "db:seed": "prisma db seed",
     "db:status": "curl http://localhost:9000/api/db/status?test=all",
-    "test:auth": "node scripts/test-auth-system.js"
+    "test:auth": "node scripts/test-auth-system.js",
+    "electron": "electron desktop/main.js",
+    "electron:dev": "NODE_ENV=development electron desktop/main.js",
+    "electron:build": "npm run build && electron-builder",
+    "tauri:dev": "cd desktop && cargo tauri dev",
+    "tauri:build": "cd desktop && cargo tauri build"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
