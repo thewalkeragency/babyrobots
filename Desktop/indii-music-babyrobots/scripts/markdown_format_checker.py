@@ -45,13 +45,21 @@ def check_code_blocks(content):
     if fence_count % 2 != 0:
         issues.append("Unmatched code block fences (``` count is odd)")
     
-    # Check for proper language tags
-    pattern = r'```(\w*)\n'
-    matches = re.findall(pattern, content)
+    # Check for proper language tags on opening fences only
+    lines = content.split('\n')
+    in_code_block = False
     
-    for match in matches:
-        if not match:
-            issues.append("Code block without language specification found")
+    for i, line in enumerate(lines, 1):
+        if line.strip().startswith('```'):
+            if not in_code_block:
+                # Opening fence - check for language
+                lang = line.strip()[3:].strip()
+                if not lang:
+                    issues.append(f"Line {i}: Code block without language specification")
+                in_code_block = True
+            else:
+                # Closing fence
+                in_code_block = False
     
     return issues
 
@@ -111,13 +119,17 @@ def check_lists(content):
     for i, line in enumerate(lines, 1):
         stripped = line.strip()
         
+        # Skip horizontal rules
+        if stripped == '---' or stripped.startswith('---'):
+            continue
+        
         # Check for inconsistent list markers
         if stripped.startswith('- ') or stripped.startswith('* ') or stripped.startswith('+ '):
             if line.startswith(' ') and not line.startswith('  '):
                 issues.append(f"Line {i}: Inconsistent list indentation")
         
-        # Check for missing space after list marker
-        if re.match(r'^[\s]*[-*+][^\s]', line):
+        # Check for missing space after list marker (but not horizontal rules)
+        if re.match(r'^[\s]*[-*+][^\s]', line) and not re.match(r'^[\s]*---', line):
             issues.append(f"Line {i}: Missing space after list marker")
     
     return issues

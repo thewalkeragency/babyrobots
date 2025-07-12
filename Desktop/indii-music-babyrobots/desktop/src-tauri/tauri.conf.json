@@ -1,72 +1,90 @@
 {
+  "$schema": "https://schema.tauri.app/config/2.0",
+  "productName": "Indii Music",
+  "version": "1.0.0",
+  "identifier": "com.indii-music.app",
   "build": {
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build",
-    "devPath": "http://localhost:3000",
-    "distDir": "../out",
-    "withGlobalTauri": false
+    "frontendDist": "../out",
+    "devUrl": "http://localhost:3000"
   },
-  "package": {
-    "productName": "Indii Music",
-    "version": "1.0.0"
-  },
-  "tauri": {
-    "allowlist": {
-      "all": true,
-      "fs": {
-        "all": true,
-        "scope": ["$APPDATA/indii-music/*", "$DESKTOP/*", "$DOWNLOAD/*"]
-      }
-    },
-    "bundle": {
-      "active": true,
-      "category": "Music",
-      "copyright": "2025 Indii Music",
-      "deb": {
-        "depends": []
-      },
-      "externalBin": [],
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon.icns",
-        "icons/icon.ico"
-      ],
-      "identifier": "com.indii-music.app",
-      "longDescription": "Professional music platform for artists, licensors, and fans",
-      "macOS": {
-        "entitlements": null,
-        "exceptionDomain": "",
-        "frameworks": [],
-        "providerShortName": null,
-        "signingIdentity": null
-      },
-      "resources": [],
-      "shortDescription": "Indii Music Platform",
-      "targets": "all",
-      "windows": {
-        "certificateThumbprint": null,
-        "digestAlgorithm": "sha256",
-        "timestampUrl": ""
-      }
-    },
+  "app": {
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-eval'; img-src 'self' data: https:; media-src 'self' data: https:; connect-src 'self' https:;",
+      "dangerousDisableAssetCspModification": false
     },
-    "updater": {
-      "active": false
-    },
+    "macOSPrivateApi": true,
     "windows": [
       {
-        "fullscreen": false,
-        "height": 800,
-        "resizable": true,
+        "label": "main",
         "title": "Indii Music",
         "width": 1200,
+        "height": 800,
         "minWidth": 800,
-        "minHeight": 600
+        "minHeight": 600,
+        "maxWidth": 2560,
+        "maxHeight": 1440,
+        "resizable": true,
+        "maximizable": true,
+        "minimizable": true,
+        "closable": true,
+        "fullscreen": false,
+        "center": true,
+        "transparent": false,
+        "alwaysOnTop": false,
+        "decorations": true,
+        "shadow": true,
+        "skipTaskbar": false,
+        "titleBarStyle": "Visible",
+        "hiddenTitle": false,
+        "acceptFirstMouse": false
       }
     ]
+  },
+  "bundle": {
+    "active": true,
+    "category": "Music",
+    "copyright": "2025 Indii Music",
+    "shortDescription": "Indii Music Platform",
+    "longDescription": "Professional music platform for artists, licensors, and fans",
+    "targets": "all",
+    "icon": [
+      "icons/icon.png"
+    ],
+    "publisher": "Indii Music Inc.",
+    "homepage": "https://indii-music.com",
+    "macOS": {
+      "minimumSystemVersion": "10.15",
+      "dmg": {
+        "appPosition": {
+          "x": 180,
+          "y": 170
+        },
+        "applicationFolderPosition": {
+          "x": 480,
+          "y": 170
+        }
+      }
+    },
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "",
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper",
+        "silent": true
+      },
+      "allowDowngrades": false,
+      "wix": {
+        "language": "en-US",
+        "template": "main.wxs"
+      }
+    }
+  },
+  "plugins": {
+    "shell": {
+      "open": true
+    }
   }
 }

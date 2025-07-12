@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "dev": "next dev -p 9000",
+    "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
@@ -15,7 +15,7 @@
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
     "db:seed": "prisma db seed",
-    "db:status": "curl http://localhost:9000/api/db/status?test=all",
+    "db:status": "curl http://localhost:3000/api/db/status?test=all",
     "test:auth": "node scripts/test-auth-system.js",
     "electron": "electron desktop/main.js",
     "electron:dev": "NODE_ENV=development electron desktop/main.js",

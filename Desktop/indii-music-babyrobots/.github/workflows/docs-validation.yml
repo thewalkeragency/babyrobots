@@ -1,0 +1,117 @@
+name: Documentation Validation
+
+on:
+  push:
+    paths:
+      - 'docs/**/*.md'
+      - 'scripts/**/*.py'
+  pull_request:
+    paths:
+      - 'docs/**/*.md'
+
+jobs:
+  validate-markdown:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install ast json re pathlib
+    
+    - name: Validate markdown syntax
+      run: |
+        python scripts/validate_markdown_examples.py docs/memory_infra.md
+    
+    - name: Check markdown formatting
+      run: |
+        python scripts/markdown_format_checker.py docs/memory_infra.md
+    
+    - name: Enhanced code testing
+      run: |
+        python scripts/test_markdown_examples.py docs/memory_infra.md
+    
+    - name: Generate interactive notebook
+      run: |
+        python scripts/generate_interactive_docs.py
+    
+    - name: Upload notebook as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: interactive-docs
+        path: docs/interactive_memory_guide.ipynb
+    
+    - name: Comment PR with validation results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '✅ Documentation validation passed! All code examples are syntactically valid and executable.'
+          })
+
+  accessibility-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Check for alt text in images
+      run: |
+        if grep -r "!\[.*\](" docs/ | grep -v "alt="; then
+          echo "❌ Found images without alt text"
+          exit 1
+        else
+          echo "✅ All images have proper alt text"
+        fi
+    
+    - name: Check for proper heading hierarchy
+      run: |
+        python -c "
+        import re
+        with open('docs/memory_infra.md') as f:
+            content = f.read()
+        headers = re.findall(r'^(#{1,6})', content, re.MULTILINE)
+        prev = 0
+        for h in headers:
+            level = len(h)
+            if level > prev + 1:
+                print(f'❌ Heading jump from {prev} to {level}')
+                exit(1)
+            prev = level
+        print('✅ Heading hierarchy is valid')
+        "
+
+  link-validation:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Check internal links
+      run: |
+        python -c "
+        import re
+        from pathlib import Path
+        
+        with open('docs/memory_infra.md') as f:
+            content = f.read()
+        
+        # Find internal file references
+        links = re.findall(r'\[(.*?)\]\(([^http][^)]+)\)', content)
+        for text, link in links:
+            if not Path(link).exists():
+                print(f'❌ Broken link: {link}')
+                exit(1)
+        print('✅ All internal links are valid')
+        "
