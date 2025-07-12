@@ -16,10 +16,14 @@ Create a scalable, memory-centric AI backend that enables powerful agent orchest
 
 - **Tech Stack**: LangGraph, LangChain, RAGAS, Redis or KuzuDB (or vector DB like Weaviate/Qdrant).
 - **Use**: Stores long-term user interaction, music metadata, past prompt results, decisions made.
+- **RAG Scope**: From micro (single sentence) to macro (entire document libraries).
 
 #### 📌 TO DO
 
--
+- ✅ Ingest chunked documents using semantic splitting.
+- ✅ Support OpenAI `text-embedding-3-small` or `large` models.
+- ✅ Create indexing strategies for paragraphs, blog posts, PDFs, and books.
+- ✅ Design fallback prompt logic if retrieval fails.
 
 #### ❗ DON'T
 
@@ -29,8 +33,13 @@ Create a scalable, memory-centric AI backend that enables powerful agent orchest
 #### 💡 EXAMPLE
 
 ```python
-from langchain.memory import ConversationBufferMemory
-memory = ConversationBufferMemory(return_messages=True)
+from langchain.document_loaders import TextLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+
+loader = TextLoader("tolstoy.txt")
+documents = loader.load()
+splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+docs = splitter.split_documents(documents)
 ```
 
 ---
@@ -42,7 +51,8 @@ memory = ConversationBufferMemory(return_messages=True)
 
 #### 📌 TO DO
 
--
+- ✅ Use graph structure to enrich RAG prompt grounding.
+- ✅ Link related entities: artist, release, playlist, task.
 
 #### ❗ DON'T
 
@@ -64,7 +74,9 @@ CREATE (a:Artist {name: "Indii"})-[:RELEASED]->(t:Track {title: "New Wave"})
 
 #### 📌 TO DO
 
--
+- ✅ Assign memory access roles
+- ✅ Tag scoped memories per task/project
+- ✅ Add memory write guards
 
 #### ❗ DON'T
 
@@ -89,7 +101,8 @@ CREATE (a:Artist {name: "Indii"})-[:RELEASED]->(t:Track {title: "New Wave"})
 
 #### 📌 TO DO
 
--
+- ✅ Integrate with web agents and real-time scraping tools
+- ✅ Auto-summarize article contents to chunk and index
 
 #### ❗ DON'T
 
@@ -111,7 +124,9 @@ fetch_reviews = ToolNode.from_browser(url="pitchfork.com/indii")
 
 #### 📌 TO DO
 
--
+- ✅ Set TTL on rush memory buckets
+- ✅ Sync important rush memory to crash
+- ✅ Use session IDs as keys
 
 #### 💡 EXAMPLE
 
@@ -142,6 +157,8 @@ fetch_reviews = ToolNode.from_browser(url="pitchfork.com/indii")
 - Seed new agents with partial replay of relevant memory
 - Update memory only after agent consensus (quorum)
 - Store abstracted conclusions, not raw API calls
+- When working with RAG, always apply preprocessing (chunking, metadata tagging)
+- Validate chunking granularity depending on use: tweets ≠ novels
 
 ---
 
