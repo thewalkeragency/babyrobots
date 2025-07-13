@@ -1,4 +1,5 @@
 import { jest } from '@jest/globals';
+import { faker } from '@faker-js/faker';
 
 // Mock the database functions
 const mockDbFunctions = {
@@ -95,7 +96,7 @@ describe('Fan Profile API', () => {
 
     await handler(req, res);
 
-    expect(updateFanProfile).toHaveBeenCalledWith(1, 'Updated Fan', JSON.stringify({ genres: ['jazz'] }), null);
+    expect(updateFanProfile).toHaveBeenCalledWith(1, req.body.displayName, JSON.stringify(req.body.musicPreferences), null);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({ message: 'Fan profile updated successfully!' });
   });

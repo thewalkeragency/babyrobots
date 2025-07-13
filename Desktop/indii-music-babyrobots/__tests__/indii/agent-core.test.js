@@ -3,7 +3,7 @@
  * Testing the 8 core concepts outlined in the Indii documentation
  */
 
-const { describe, it, expect, beforeEach, afterEach } = require('@jest/globals');
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 
 // Mock AI agent components
 const mockLLMEngine = {

@@ -161,10 +161,10 @@ export class MemoryManager {
 
   // Extract scope-specific data for seeding
   extractScopeData(data, scope) {
-    const scopeMap = {
-      'project': ['goals', 'requirements', 'architecture', 'timeline'],
+const scopeMap = {
+      'project': ['goals', 'requirements', 'architecture', 'timeline', 'technical_details'],
       'implementation': ['code', 'tasks', 'technical_details', 'dependencies'],
-      'monitoring': ['metrics', 'performance', 'alerts', 'logs'],
+      'monitoring': ['metrics', 'performance', 'alerts', 'logs', 'requirements'],
       'prototype': ['experiments', 'poc', 'drafts', 'iterations']
     };
 

@@ -30,6 +30,10 @@ class AIRouter {
     }
   }
 
+  isProviderInitialized(providerName) {
+    return this.providers[providerName] !== null;
+  }
+
   // Route request to appropriate provider with fallback
   async route(message, options = {}) {
     const { provider = this.defaultProvider, role = 'assistant' } = options;
@@ -101,6 +105,28 @@ class GeminiProvider extends AIProvider {
   async generate(message, options = {}) {
     const { role = 'assistant' } = options;
     
+    const formattedMessage = this.formatMessage(message, role);
+    console.log('Formatted message for Gemini API:', formattedMessage);
+
+    console.log('Sending request to Gemini API:', {
+      url: `${this.baseUrl}/gemini-1.5-flash:generateContent?key=${this.apiKey}`,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: formattedMessage
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 2048,
+        }
+      })
+    });
+
     const response = await fetch(
       `${this.baseUrl}/gemini-1.5-flash:generateContent?key=${this.apiKey}`,
       {
@@ -111,7 +137,7 @@ class GeminiProvider extends AIProvider {
         body: JSON.stringify({
           contents: [{
             parts: [{
-              text: this.formatMessage(message, role)
+              text: formattedMessage
             }]
           }],
           generationConfig: {
@@ -122,12 +148,26 @@ class GeminiProvider extends AIProvider {
       }
     );
 
+    console.log('Received response from Gemini API:', { status: response.status, statusText: response.statusText });
+
     if (!response.ok) {
       const errorText = await response.text();
+      console.error(`Gemini API error: ${response.status} - ${errorText}`);
       throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
     }
 
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const errorText = await response.text();
+      console.error('Gemini API returned non-JSON response:', errorText);
+      throw new Error(`Gemini API returned unexpected content type: ${contentType}. Response: ${errorText}`);
+    }
+
     const data = await response.json();
+    if (!data.candidates || data.candidates.length === 0 || !data.candidates[0].content || !data.candidates[0].content.parts || data.candidates[0].content.parts.length === 0) {
+      console.error('Gemini API response missing expected data structure:', data);
+      throw new Error('Gemini API response missing expected data structure.');
+    }
     return data.candidates[0].content.parts[0].text;
   }
 

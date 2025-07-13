@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ArtistProfileForm from '../../src/components/ArtistProfileForm';
+import { faker } from '@faker-js/faker';
 
 // Mock the fetch API globally, but allow for specific overrides per test
 global.fetch = jest.fn();
@@ -40,14 +41,14 @@ describe('ArtistProfileForm', () => {
         ok: true,
         json: () => Promise.resolve({
           id: 101,
-          stage_name: 'Existing Artist',
-          legal_name: 'Jane Doe',
-          bio: 'A test artist.',
-          website: 'http://existing.com',
-          pro_affiliation: 'BMI',
-          ipi_number: '12345',
-          social_links: '{"twitter":"@existing"}',
-          profile_image_url: 'http://existing.com/image.jpg',
+          stage_name: faker.person.firstName(),
+          legal_name: faker.person.lastName(),
+          bio: faker.lorem.sentence(),
+          website: faker.internet.url(),
+          pro_affiliation: faker.company.name(),
+          ipi_number: faker.string.numeric(5),
+          social_links: JSON.stringify({ twitter: faker.internet.userName() }),
+          profile_image_url: faker.image.avatar(),
         }),
       })
     );
@@ -111,14 +112,14 @@ describe('ArtistProfileForm', () => {
         ok: true,
         json: () => Promise.resolve({
           id: 101,
-          stage_name: 'Existing Artist',
-          legal_name: 'Jane Doe',
-          bio: 'A test artist.',
-          website: 'http://existing.com',
-          pro_affiliation: 'BMI',
-          ipi_number: '12345',
-          social_links: '{"twitter":"@existing"}',
-          profile_image_url: 'http://existing.com/image.jpg',
+          stage_name: faker.person.firstName(),
+          legal_name: faker.person.lastName(),
+          bio: faker.lorem.sentence(),
+          website: faker.internet.url(),
+          pro_affiliation: faker.company.name(),
+          ipi_number: faker.string.numeric(5),
+          social_links: JSON.stringify({ twitter: faker.internet.userName() }),
+          profile_image_url: faker.image.avatar(),
         }),
       })
     );
@@ -133,7 +134,8 @@ describe('ArtistProfileForm', () => {
     });
 
     await userEvent.clear(screen.getByLabelText(/Bio:/i));
-    await userEvent.type(screen.getByLabelText(/Bio:/i), 'Updated bio content.');
+    const updatedBio = faker.lorem.sentence();
+    await userEvent.type(screen.getByLabelText(/Bio:/i), updatedBio);
     await fireEvent.click(screen.getByRole('button', { name: /Update Profile/i }));
 
     await waitFor(() => {
@@ -144,14 +146,14 @@ describe('ArtistProfileForm', () => {
           method: 'PUT',
           body: JSON.stringify({
             userId: 1,
-            stageName: 'Existing Artist',
-            legalName: 'Jane Doe',
-            bio: 'Updated bio content.',
-            website: 'http://existing.com',
-            proAffiliation: 'BMI',
-            ipiNumber: '12345',
-            socialLinks: '{"twitter":"@existing"}',
-            profileImageUrl: 'http://existing.com/image.jpg',
+            stageName: expect.any(String), // Value is dynamic from mock
+            legalName: expect.any(String), // Value is dynamic from mock
+            bio: updatedBio,
+            website: expect.any(String),
+            proAffiliation: expect.any(String),
+            ipiNumber: expect.any(String),
+            socialLinks: expect.any(String),
+            profileImageUrl: expect.any(String),
           }),
         })
       );

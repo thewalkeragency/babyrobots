@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import RegisterForm from '../../src/components/RegisterForm';
 import LoginForm from '../../src/components/LoginForm';
 import { AuthProvider } from '../../src/contexts/AuthContext';
+import { faker } from '@faker-js/faker';
 
 // Mock the auth service
 jest.mock('../../src/lib/auth-service.js', () => ({
@@ -58,13 +59,14 @@ describe('Auth Forms', () => {
         json: () => Promise.resolve({ 
           success: true, 
           message: 'Registration successful',
-          user: { id: 'uuid-123', email: 'test@example.com', role: 'fan' }
+          user: { id: faker.string.uuid(), email: faker.internet.email(), role: 'fan' }
         }),
-      });
 
       renderWithAuth(<RegisterForm />);
-      await userEvent.type(screen.getByLabelText(/Email:/i), 'test@example.com');
-      await userEvent.type(screen.getByLabelText(/Password:/i), 'password123');
+      const email = faker.internet.email();
+      const password = faker.internet.password();
+      await userEvent.type(screen.getByLabelText(/Email:/i), email);
+      await userEvent.type(screen.getByLabelText(/Password:/i), password);
       await userEvent.selectOptions(screen.getByLabelText(/Role:/i), 'fan');
 
       await fireEvent.click(screen.getByRole('button', { name: /Register/i }));
@@ -166,8 +168,10 @@ describe('Auth Forms', () => {
       });
 
       renderWithAuth(<LoginForm />);
-      await userEvent.type(screen.getByLabelText(/Email:/i), 'test@example.com');
-      await userEvent.type(screen.getByLabelText(/Password:/i), 'wrongpassword');
+      const email = faker.internet.email();
+      const password = faker.internet.password();
+      await userEvent.type(screen.getByLabelText(/Email:/i), email);
+      await userEvent.type(screen.getByLabelText(/Password:/i), password);
 
       await fireEvent.click(screen.getByRole('button', { name: /Login/i }));
 

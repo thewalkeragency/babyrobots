@@ -5,6 +5,9 @@ import signoutHandler from '../../pages/api/auth/signout';
 import sessionHandler from '../../pages/api/auth/session';
 import profileHandler from '../../pages/api/auth/profile';
 
+import { jest } from '@jest/globals';
+import { faker } from '@faker-js/faker';
+
 // Mock the auth service to prevent actual Supabase calls during tests
 jest.mock('../../src/lib/auth-service.js', () => ({
   authService: {
@@ -17,7 +20,7 @@ jest.mock('../../src/lib/auth-service.js', () => ({
   },
 }));
 
-const { authService } = require('../../src/lib/auth-service.js');
+const authService = require('../../src/lib/auth-service.js').authService;
 
 describe('Authentication API', () => {
   let req;
@@ -141,7 +144,9 @@ describe('Authentication API', () => {
     });
 
     it('should return 401 for invalid credentials', async () => {
-      req.body = { email: 'test@example.com', password: 'wrongpassword' };
+      const email = faker.internet.email();
+      const password = faker.internet.password();
+      req.body = { email, password };
       authService.signIn.mockResolvedValueOnce({
         success: false,
         error: 'Invalid credentials'
@@ -185,7 +190,7 @@ describe('Authentication API', () => {
       authService.getCurrentUser.mockResolvedValueOnce({
         success: true,
         authenticated: true,
-        user: { id: 'uuid-123', email: 'test@example.com' },
+        user: { id: faker.string.uuid(), email: faker.internet.email() },
         profile: { role: 'artist' },
         session: { expires_at: new Date().getTime() + 3600000 }
       });
@@ -196,7 +201,7 @@ describe('Authentication API', () => {
       expect(res.json).toHaveBeenCalledWith({
         success: true,
         authenticated: true,
-        user: { id: 'uuid-123', email: 'test@example.com', role: 'artist' },
+        user: { id: faker.string.uuid(), email: faker.internet.email(), role: 'artist' },
         profile: { role: 'artist' }
       });
     });

@@ -1,14 +1,15 @@
 import handler from '../../pages/api/ai/chat';
 import path from 'path';
 import fs from 'fs';
+import { faker } from '@faker-js/faker';
 
 // Store original process.cwd to restore it
 const originalProcessCwd = process.cwd;
 
 // Mock the underlying lib/db that db-adapter uses
-jest.mock('../../lib/db', () => {
-  const fsActual = require('fs');
-  const pathActual = require('path');
+jest.mock('../../src/lib/db', () => {
+  const fsActual = jest.requireActual('fs');
+  const pathActual = jest.requireActual('path');
   
   // Define paths within the mock to avoid hoisting issues
   const TEST_DB_DIR_CHAT_API = pathActual.join(__dirname, 'test_chat_api_db_data');
@@ -19,23 +20,21 @@ jest.mock('../../lib/db', () => {
 
   const originalCwd = process.cwd;
   process.cwd = () => TEST_DB_DIR_CHAT_API;
-  const actualDbModule = jest.requireActual('../../lib/db');
+  const actualDbModule = jest.requireActual('../../src/lib/db');
   process.cwd = originalCwd;
 
   return actualDbModule;
 });
 
 // Ensure db-adapter uses the mocked database
-jest.mock('../../src/lib/db-adapter', () => {
-  const mockDb = jest.requireMock('../../lib/db');
-  return mockDb;
-});
+import * as dbAdapter from '../../src/lib/db-adapter';
+jest.mock('../../src/lib/db-adapter');
 
 // --- Test Database Setup paths ---
 const TEST_DB_DIR_CHAT_API = path.join(__dirname, 'test_chat_api_db_data');
 const ACTUAL_DB_PATH_CHAT_API = path.join(TEST_DB_DIR_CHAT_API, 'indii-music.db'); // Use the standard filename
 
-const { db, createUser, createChatSession, getChatHistory, getChatSession: getChatSessionForTest } = require('../../lib/db');
+import { db, createUser, createChatSession, getChatHistory, getChatSession as getChatSessionForTest } from '../../src/lib/db';
 
 
 // --- AI Service Mock ---
@@ -127,7 +126,7 @@ describe('AI Chat API (/pages/api/ai/chat.js)', () => {
   it('should save chat message to DB if valid sessionId is provided', async () => {
     const sessionId = 'save-this-chat-session';
     const userMessage = 'Test message for saving';
-    const aiReply = 'AI reply that should be saved';
+    const aiReply = faker.lorem.sentence();
     // Ensure the mock for this specific call returns the desired AI reply
     mockSendMessage.mockResolvedValueOnce({ response: { text: () => aiReply } });
 

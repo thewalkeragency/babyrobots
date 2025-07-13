@@ -75,15 +75,27 @@ export class CrashMemory {
     return new Promise((resolve, reject) => {
       this.db.all(`
         SELECT * FROM memory_entries 
-        WHERE session_id = ? AND agent_id = ? 
+        WHERE session_id = ? 
         AND scope LIKE ? AND is_crash = TRUE
         ORDER BY created_at DESC LIMIT ?
-      `, [sessionId, agentId, `${scope}%`, limit], (err, rows) => {
+      `, [sessionId, `${scope}%`, limit], (err, rows) => {
         if (err) {
           console.error('Error retrieving memory:', err.message);
           reject(err);
         } else {
-          resolve(rows);
+          // Parse the JSON content and return the actual data
+          if (rows.length > 0) {
+            try {
+              const latestRow = rows[0];
+              const parsedContent = JSON.parse(latestRow.content);
+              resolve(parsedContent);
+            } catch (parseErr) {
+              console.error('Error parsing stored content:', parseErr.message);
+              resolve(null);
+            }
+          } else {
+            resolve(null);
+          }
         }
       });
     });
@@ -155,6 +167,5 @@ export const initializeCrashMemory = (options = {}) => {
   return crashMemory;
 };
 
-// Direct export for class usage
-export { CrashMemory }; 
+// Class is already exported directly on line 8
 

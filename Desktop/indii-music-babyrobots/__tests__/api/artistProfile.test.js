@@ -1,14 +1,23 @@
-import { createArtistProfile, getArtistProfileByUserId, updateArtistProfile, deleteArtistProfile } from '../../src/lib/db';
-import handler from '../../pages/api/profile/artist';
+import { jest } from '@jest/globals';
+import { faker } from '@faker-js/faker';
 
-// Mock the database functions
+// Define the mock functions first
+const mockCreateArtistProfile = jest.fn();
+const mockGetArtistProfileByUserId = jest.fn();
+const mockUpdateArtistProfile = jest.fn();
+const mockDeleteArtistProfile = jest.fn();
+
+// Then mock the module, returning these mock functions
 jest.mock('../../src/lib/db', () => ({
   __esModule: true,
-  createArtistProfile: jest.fn(),
-  getArtistProfileByUserId: jest.fn(),
-  updateArtistProfile: jest.fn(),
-  deleteArtistProfile: jest.fn(),
+  createArtistProfile: mockCreateArtistProfile,
+  getArtistProfileByUserId: mockGetArtistProfileByUserId,
+  updateArtistProfile: mockUpdateArtistProfile,
+  deleteArtistProfile: mockDeleteArtistProfile,
 }));
+
+// Now import the handler
+import handler from '../../pages/api/profile/artist';
 
 describe('Artist Profile API', () => {
   let req;
@@ -91,8 +100,8 @@ describe('Artist Profile API', () => {
 
   it('should return 404 if artist profile not found on PUT', async () => {
     req.method = 'PUT';
-    req.body = { ...req.body, stageName: 'Updated Artist' };
-    updateArtistProfile.mockReturnValueOnce(0); // 0 changes made
+    req.body = { ...req.body, stageName: faker.person.firstName() };
+    mockUpdateArtistProfile.mockReturnValueOnce(0); // 0 changes made
 
     await handler(req, res);
 
@@ -103,18 +112,18 @@ describe('Artist Profile API', () => {
   // Test DELETE
   it('should delete an artist profile', async () => {
     req.method = 'DELETE';
-    deleteArtistProfile.mockReturnValueOnce(1); // 1 change made
+    mockDeleteArtistProfile.mockReturnValueOnce(1); // 1 change made
 
     await handler(req, res);
 
-    expect(deleteArtistProfile).toHaveBeenCalledWith(1);
+    expect(mockDeleteArtistProfile).toHaveBeenCalledWith(1);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({ message: 'Artist profile deleted successfully!' });
   });
 
   it('should return 404 if artist profile not found on DELETE', async () => {
     req.method = 'DELETE';
-    deleteArtistProfile.mockReturnValueOnce(0); // 0 changes made
+    mockDeleteArtistProfile.mockReturnValueOnce(0); // 0 changes made
 
     await handler(req, res);
 

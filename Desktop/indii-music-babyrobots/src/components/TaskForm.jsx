@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Card, Button, Badge, Input, Select } from './ui';
 
 const TaskForm = ({ onCreateTask, onCancel, userRole }) => {
   const [formData, setFormData] = useState({
@@ -21,9 +22,9 @@ const TaskForm = ({ onCreateTask, onCancel, userRole }) => {
   ];
 
   const priorities = [
-    { value: 'low', label: 'Low Priority', color: 'bg-green-100 text-green-800' },
-    { value: 'medium', label: 'Medium Priority', color: 'bg-yellow-100 text-yellow-800' },
-    { value: 'high', label: 'High Priority', color: 'bg-red-100 text-red-800' }
+    { value: 'low', label: 'Low Priority', color: 'success' },
+    { value: 'medium', label: 'Medium Priority', color: 'warning' },
+    { value: 'high', label: 'High Priority', color: 'danger' }
   ];
 
   const handleInputChange = (field, value) => {
@@ -107,74 +108,68 @@ const TaskForm = ({ onCreateTask, onCancel, userRole }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <h2 className="text-xl font-semibold text-gray-900">Create New Task</h2>
-        <p className="text-sm text-gray-600 mt-1">
-          Add a new task to your {userRole} workflow
-        </p>
-      </div>
+    <Card className="uk-card-body uk-theme-zinc dark">
+      <h2 className="uk-card-title uk-text-white">Create New Task</h2>
+      <p className="uk-text-muted uk-margin-small-bottom">
+        Add a new task to your {userRole} workflow
+      </p>
 
-      <form onSubmit={handleSubmit} className="p-6 space-y-6">
+      <form onSubmit={handleSubmit} className="uk-form-stacked uk-margin-top">
         {/* Title */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Task Title *
-          </label>
-          <input
-            type="text"
-            value={formData.title}
-            onChange={(e) => handleInputChange('title', e.target.value)}
-            className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              errors.title ? 'border-red-300' : 'border-gray-300'
-            }`}
-            placeholder="Enter a clear, actionable task title..."
-            maxLength={200}
-          />
-          {errors.title && (
-            <p className="text-red-600 text-xs mt-1">{errors.title}</p>
-          )}
+        <div className="uk-margin">
+          <label className="uk-form-label uk-text-muted">Task Title *</label>
+          <div className="uk-form-controls">
+            <input
+              type="text"
+              value={formData.title}
+              onChange={(e) => handleInputChange('title', e.target.value)}
+              className={`uk-input uk-theme-zinc dark ${errors.title ? 'uk-form-danger' : ''}`}
+              placeholder="Enter a clear, actionable task title..."
+              maxLength={200}
+            />
+            {errors.title && (
+              <p className="uk-text-danger uk-text-small uk-margin-small-top">{errors.title}</p>
+            )}
+          </div>
         </div>
 
         {/* Description */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Description
-          </label>
-          <textarea
-            value={formData.description}
-            onChange={(e) => handleInputChange('description', e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Provide additional details, requirements, or context..."
-            rows={4}
-            maxLength={1000}
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            {formData.description.length}/1000 characters
-          </p>
+        <div className="uk-margin">
+          <label className="uk-form-label uk-text-muted">Description</label>
+          <div className="uk-form-controls">
+            <textarea
+              value={formData.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+              className="uk-textarea uk-theme-zinc dark"
+              placeholder="Provide additional details, requirements, or context..."
+              rows="4"
+              maxLength={1000}
+            />
+            <p className="uk-text-small uk-text-muted uk-margin-small-top">
+              {formData.description.length}/1000 characters
+            </p>
+          </div>
         </div>
 
         {/* Priority and Category Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="uk-grid-small uk-child-width-1-2@s" uk-grid="true">
           {/* Priority */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Priority Level
-            </label>
-            <div className="space-y-2">
+            <label className="uk-form-label uk-text-muted">Priority Level</label>
+            <div className="uk-form-controls uk-form-controls-text">
               {priorities.map((priority) => (
-                <label key={priority.value} className="flex items-center">
+                <label key={priority.value} className="uk-margin-small-right">
                   <input
                     type="radio"
                     name="priority"
                     value={priority.value}
                     checked={formData.priority === priority.value}
                     onChange={(e) => handleInputChange('priority', e.target.value)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    className="uk-radio"
                   />
-                  <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${priority.color}`}>
+                  <Badge variant={priority.color} className="uk-margin-small-left">
                     {priority.label}
-                  </span>
+                  </Badge>
                 </label>
               ))}
             </div>
@@ -182,21 +177,19 @@ const TaskForm = ({ onCreateTask, onCancel, userRole }) => {
 
           {/* Category */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Category
-            </label>
-            <div className="space-y-2">
+            <label className="uk-form-label uk-text-muted">Category</label>
+            <div className="uk-form-controls uk-form-controls-text">
               {categories.map((category) => (
-                <label key={category.value} className="flex items-center">
+                <label key={category.value} className="uk-margin-small-right">
                   <input
                     type="radio"
                     name="category"
                     value={category.value}
                     checked={formData.category === category.value}
                     onChange={(e) => handleInputChange('category', e.target.value)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    className="uk-radio"
                   />
-                  <span className="ml-2 text-sm">
+                  <span className="uk-margin-small-left uk-text-muted">
                     {category.label}
                   </span>
                 </label>
@@ -206,99 +199,94 @@ const TaskForm = ({ onCreateTask, onCancel, userRole }) => {
         </div>
 
         {/* Due Date */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Due Date (Optional)
-          </label>
-          <input
-            type="date"
-            value={formData.dueDate}
-            onChange={(e) => handleInputChange('dueDate', e.target.value)}
-            min={new Date().toISOString().split('T')[0]}
-            className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              errors.dueDate ? 'border-red-300' : 'border-gray-300'
-            }`}
-          />
-          {errors.dueDate && (
-            <p className="text-red-600 text-xs mt-1">{errors.dueDate}</p>
-          )}
+        <div className="uk-margin">
+          <label className="uk-form-label uk-text-muted">Due Date (Optional)</label>
+          <div className="uk-form-controls">
+            <input
+              type="date"
+              value={formData.dueDate}
+              onChange={(e) => handleInputChange('dueDate', e.target.value)}
+              min={new Date().toISOString().split('T')[0]}
+              className={`uk-input uk-theme-zinc dark ${errors.dueDate ? 'uk-form-danger' : ''}`}
+            />
+            {errors.dueDate && (
+              <p className="uk-text-danger uk-text-small uk-margin-small-top">{errors.dueDate}</p>
+            )}
+          </div>
         </div>
 
         {/* Tags */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Tags (Optional)
-          </label>
-          <div className="flex space-x-2 mb-2">
-            <input
-              type="text"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
-              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Add a tag and press Enter..."
-              maxLength={20}
-            />
-            <button
-              type="button"
-              onClick={handleAddTag}
-              className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
-            >
-              Add
-            </button>
-          </div>
-          
-          {formData.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {formData.tags.map((tag, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800"
+        <div className="uk-margin">
+          <label className="uk-form-label uk-text-muted">Tags (Optional)</label>
+          <div className="uk-form-controls">
+            <div className="uk-flex uk-flex-middle uk-grid-small" uk-grid="true">
+              <div className="uk-width-expand">
+                <input
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
+                  className="uk-input uk-theme-zinc dark"
+                  placeholder="Add a tag and press Enter..."
+                  maxLength={20}
+                />
+              </div>
+              <div>
+                <Button
+                  type="button"
+                  onClick={handleAddTag}
+                  variant="primary" size="small"
                 >
-                  {tag}
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveTag(tag)}
-                    className="ml-1 text-blue-600 hover:text-blue-800"
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
+                  Add
+                </Button>
+              </div>
             </div>
-          )}
+            
+            {formData.tags.length > 0 && (
+              <div className="uk-flex uk-flex-wrap uk-grid-small uk-margin-small-top" uk-grid="true">
+                {formData.tags.map((tag, index) => (
+                  <Badge key={index} variant="primary" size="small">
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTag(tag)}
+                      className="uk-button-text uk-margin-small-left"
+                    >
+                      x
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Error Message */}
         {errors.submit && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-            <p className="text-red-600 text-sm">{errors.submit}</p>
+          <div className="uk-alert-danger" uk-alert="true">
+            <p>{errors.submit}</p>
           </div>
         )}
 
         {/* Form Actions */}
-        <div className="flex justify-between pt-4 border-t border-gray-200">
-          <button
+        <div className="uk-margin-top uk-flex uk-flex-between">
+          <Button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50"
+            variant="default"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
             disabled={isSubmitting}
-            className={`px-6 py-2 text-sm font-medium text-white rounded-lg ${
-              isSubmitting
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700'
-            }`}
+            variant={isSubmitting ? 'default' : 'primary'}
           >
             {isSubmitting ? 'Creating...' : 'Create Task'}
-          </button>
+          </Button>
         </div>
       </form>
-    </div>
+    </Card>
   );
 };
 

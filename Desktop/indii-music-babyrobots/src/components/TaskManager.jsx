@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import TaskList from './TaskList';
 import TaskForm from './TaskForm';
 import TaskDashboard from './TaskDashboard';
+import { UserCircleIcon } from '@heroicons/react/24/outline';
+import { Card, Select, Button } from './ui';
 
 const TaskManager = ({ userId, userRole = 'artist' }) => {
   const [tasks, setTasks] = useState([]);
@@ -134,108 +136,99 @@ const TaskManager = ({ userId, userRole = 'artist' }) => {
 
   if (loading && tasks.length === 0) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-2">Loading tasks...</span>
-      </div>
+      <Card className="uk-card-body uk-theme-zinc dark uk-text-center">
+        <div className="uk-flex uk-flex-center uk-flex-middle">
+          <div className="uk-spinner uk-margin-small-right"></div>
+          <span className="uk-text-muted">Loading tasks...</span>
+        </div>
+      </Card>
     );
   }
 
   return (
-    <div className="task-manager">
+    <div className="uk-container uk-container-expand uk-margin-top">
       {/* Navigation */}
-      <div className="bg-white shadow-sm border-b mb-6">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">Task Management</h1>
-            <div className="flex space-x-2">
-              <button
-                onClick={() => setActiveView('dashboard')}
-                className={`px-4 py-2 rounded-lg font-medium ${
-                  activeView === 'dashboard'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Dashboard
-              </button>
-              <button
-                onClick={() => setActiveView('list')}
-                className={`px-4 py-2 rounded-lg font-medium ${
-                  activeView === 'list'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Task List
-              </button>
-              <button
-                onClick={() => setActiveView('create')}
-                className={`px-4 py-2 rounded-lg font-medium ${
-                  activeView === 'create'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-green-600 text-white hover:bg-green-700'
-                }`}
-              >
-                Create Task
-              </button>
-            </div>
+      <Card className="uk-card-body uk-theme-zinc dark uk-margin-bottom">
+        <div className="uk-flex uk-flex-middle uk-flex-between">
+          <h1 className="uk-card-title uk-text-white uk-margin-remove">Task Management</h1>
+          <div className="uk-button-group">
+            <Button
+              onClick={() => setActiveView('dashboard')}
+              variant={activeView === 'dashboard' ? 'primary' : 'default'}
+              size="small"
+            >
+              Dashboard
+            </Button>
+            <Button
+              onClick={() => setActiveView('list')}
+              variant={activeView === 'list' ? 'primary' : 'default'}
+              size="small"
+            >
+              Task List
+            </Button>
+            <Button
+              onClick={() => setActiveView('create')}
+              variant={activeView === 'create' ? 'primary' : 'success'}
+              size="small"
+            >
+              Create Task
+            </Button>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Filters */}
       {activeView !== 'create' && (
-        <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
-          <div className="flex flex-wrap gap-4">
+        <Card className="uk-card-body uk-theme-zinc dark uk-margin-bottom">
+          <div className="uk-grid-small uk-child-width-auto" uk-grid="true">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Status
-              </label>
-              <select
-                value={filters.status}
-                onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-                className="border border-gray-300 rounded-md px-3 py-1 text-sm"
-              >
-                <option value="all">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
-              </select>
+              <label className="uk-form-label uk-text-muted">Status</label>
+              <div className="uk-form-controls">
+                <Select
+                  value={filters.status}
+                  onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+                  className="uk-form-small uk-form-width-small"
+                >
+                  <option value="all">All Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                </Select>
+              </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Priority
-              </label>
-              <select
-                value={filters.priority}
-                onChange={(e) => setFilters(prev => ({ ...prev, priority: e.target.value }))}
-                className="border border-gray-300 rounded-md px-3 py-1 text-sm"
-              >
-                <option value="all">All Priority</option>
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
-              </select>
+              <label className="uk-form-label uk-text-muted">Priority</label>
+              <div className="uk-form-controls">
+                <Select
+                  value={filters.priority}
+                  onChange={(e) => setFilters(prev => ({ ...prev, priority: e.target.value }))}
+                  className="uk-form-small uk-form-width-small"
+                >
+                  <option value="all">All Priority</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </Select>
+              </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Category
-              </label>
-              <select
-                value={filters.category}
-                onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
-                className="border border-gray-300 rounded-md px-3 py-1 text-sm"
-              >
-                <option value="all">All Categories</option>
-                <option value="release">Release</option>
-                <option value="marketing">Marketing</option>
-                <option value="collaboration">Collaboration</option>
-                <option value="general">General</option>
-              </select>
+              <label className="uk-form-label uk-text-muted">Category</label>
+              <div className="uk-form-controls">
+                <Select
+                  value={filters.category}
+                  onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
+                  className="uk-form-small uk-form-width-small"
+                >
+                  <option value="all">All Categories</option>
+                  <option value="release">Release</option>
+                  <option value="marketing">Marketing</option>
+                  <option value="collaboration">Collaboration</option>
+                  <option value="general">General</option>
+                </Select>
+              </div>
             </div>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Content */}

@@ -1,11 +1,11 @@
-const { createMocks } = require('node-mocks-http');
-const { createUser, db } = require('../lib/db');
+import { createMocks } from 'node-mocks-http';
+import { createUser, db } from '../lib/db';
 
 // Import API handlers
-const artistHandler = require('../pages/api/profiles/artist.js').default;
-const fanHandler = require('../pages/api/profiles/fan.js').default;
-const licensorHandler = require('../pages/api/profiles/licensor.js').default;
-const serviceProviderHandler = require('../pages/api/profiles/service-provider.js').default;
+import artistHandler from '../pages/api/profiles/artist.js';
+import fanHandler from '../pages/api/profiles/fan.js';
+import licensorHandler from '../pages/api/profiles/licensor.js';
+import serviceProviderHandler from '../pages/api/profiles/service-provider.js';
 
 describe('🧪 Profile API Endpoints Test Suite', () => {
   let testUserId;

@@ -1,16 +1,19 @@
 // Test the database functions directly instead of the API handler
 // This avoids module resolution issues with Next.js API routes in Jest
-import { createTrack, getTrackById, updateTrack, deleteTrack, getTracksByArtistId } from '@/lib/db';
+import { jest } from '@jest/globals';
 
 // Mock the database functions
-jest.mock('@/lib/db', () => ({
-  __esModule: true,
+const mockDbFunctions = {
   createTrack: jest.fn(),
   getTrackById: jest.fn(),
   updateTrack: jest.fn(),
   deleteTrack: jest.fn(),
   getTracksByArtistId: jest.fn(),
-}));
+};
+
+jest.mock('@/lib/db', () => mockDbFunctions);
+
+const { createTrack, getTrackById, updateTrack, deleteTrack, getTracksByArtistId } = mockDbFunctions;
 
 describe('Tracks Database Functions', () => {
   beforeEach(() => {

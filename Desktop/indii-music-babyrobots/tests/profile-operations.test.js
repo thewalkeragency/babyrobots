@@ -1,4 +1,4 @@
-const { 
+import { 
   createUser, 
   createArtistProfile, 
   createFanProfile, 
@@ -21,7 +21,7 @@ const {
   getProfilesByType,
   validateProfileData,
   db 
-} = require('../lib/db');
+} from '../lib/db';
 
 describe('🧪 User Profile Database Operations Test Suite', () => {
   // Clean database before each test

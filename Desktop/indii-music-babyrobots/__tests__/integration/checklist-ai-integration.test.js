@@ -4,6 +4,7 @@
 
 import { releaseChecklistGenerator } from '@/lib/release-checklist-generator';
 import AIRouter from '@/lib/ai-router';
+import { jest } from '@jest/globals';
 
 describe('Checklist AI Integration', () => {
   let aiRouter;

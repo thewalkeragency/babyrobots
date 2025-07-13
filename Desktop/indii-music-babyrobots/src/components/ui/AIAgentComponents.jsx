@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { clsx } from 'clsx';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import {
   MusicalNoteIcon,
   PaintBrushIcon,
@@ -143,22 +145,75 @@ export const AIAgentCard = ({
 // AI Chat Interface
 export const AIChatInterface = ({ 
   agent, 
-  messages = [], 
+  messages: initialMessages = [], 
   onSendMessage,
-  className 
+  className,
+  sessionId,
+  userId
 }) => {
   const [inputMessage, setInputMessage] = useState('');
+  const [messages, setMessages] = useState(initialMessages);
   const [isTyping, setIsTyping] = useState(false);
 
-  const handleSend = () => {
+  useEffect(() => {
+    if (sessionId && userId) {
+      const fetchChatHistory = async () => {
+        try {
+          const response = await fetch(`/api/chat/history?sessionId=${sessionId}&userId=${userId}`);
+          const data = await response.json();
+          if (response.ok) {
+            setMessages(data.history);
+          } else {
+            console.error('Failed to fetch chat history:', data.error);
+          }
+        } catch (error) {
+          console.error('Error fetching chat history:', error);
+        }
+      };
+      fetchChatHistory();
+    }
+  }, [sessionId, userId]);
+
+  const handleSend = async () => {
     if (!inputMessage.trim()) return;
     
-    onSendMessage?.(inputMessage);
+    const newMessage = {
+      role: 'user',
+      content: inputMessage,
+      timestamp: new Date().toLocaleTimeString()
+    };
+    setMessages(prev => [...prev, newMessage]);
     setInputMessage('');
     setIsTyping(true);
-    
-    // Simulate AI response delay
-    setTimeout(() => setIsTyping(false), 2000);
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: inputMessage, role: agent?.id || 'general', sessionId, userId }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        const aiResponse = {
+          role: 'assistant',
+          content: data.reply,
+          timestamp: new Date().toLocaleTimeString()
+        };
+        setMessages(prev => [...prev, aiResponse]);
+      } else {
+        console.error('AI chat failed:', data.error);
+        setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${data.error}`, timestamp: new Date().toLocaleTimeString() }]);
+      }
+    } catch (error) {
+      console.error('Error sending message to AI:', error);
+      setMessages(prev => [...prev, { role: 'assistant', content: 'Error: Could not connect to AI.', timestamp: new Date().toLocaleTimeString() }]);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -211,7 +266,9 @@ export const AIChatInterface = ({
                     : "bg-studio-900 text-technical-200 border border-technical-700"
                 )}
               >
-                <p className="text-sm">{message.content}</p>
+                <div className="text-sm prose prose-invert">
+                  <ReactMarkdown>{message.content}</ReactMarkdown>
+                </div>
                 <p className="text-xs opacity-70 mt-1">{message.timestamp}</p>
               </div>
             </div>

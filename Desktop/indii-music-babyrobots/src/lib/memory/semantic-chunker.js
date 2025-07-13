@@ -69,8 +69,9 @@ export class SemanticChunker {
         chunkIndex++;
       }
       
-      // Move start position with overlap
-      start = Math.max(end - this.overlap, start + 1);
+      // Move start position with overlap, ensuring progress
+      const nextStart = end - this.overlap;
+      start = Math.max(nextStart, start + Math.max(this.chunkSize / 4, 20));
     }
 
     return chunks;

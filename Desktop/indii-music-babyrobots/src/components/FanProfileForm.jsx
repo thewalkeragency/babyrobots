@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import ProfileImageUpload from './ProfileImageUpload';
+import { useToast } from './ui/Toast';
 
 const FanProfileForm = ({ userId, onProfileSaved }) => {
   const [displayName, setDisplayName] = useState('');
   const [musicPreferences, setMusicPreferences] = useState(''); // Stored as JSON string
   const [listeningHistory, setListeningHistory] = useState(''); // Stored as JSON string
-  const [message, setMessage] = useState('');
+  
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const addToast = useToast();
 
   useEffect(() => {
     if (userId) {
@@ -25,13 +29,13 @@ const FanProfileForm = ({ userId, onProfileSaved }) => {
             setIsEditing(true);
           } else if (response.status === 404) {
             setIsEditing(false);
-            setMessage('No existing profile found. You can create a new one below.');
+            addToast('No existing profile found. You can create a new one below.', 'info');
           } else {
-            setMessage(`Error fetching profile: ${data.message || 'Unknown error'}`);
+            addToast(`Error fetching profile: ${data.message || 'Unknown error'}`, 'error');
           }
         } catch (error) {
           console.error('Error fetching fan profile:', error);
-          setMessage('Error fetching profile. Please try again.');
+          addToast('Error fetching profile. Please try again.', 'error');
         }
       };
       fetchProfile();
@@ -46,10 +50,11 @@ const FanProfileForm = ({ userId, onProfileSaved }) => {
     setMessage('');
 
     if (!userId) {
-      setMessage('User ID is required to create or update a profile.');
+      addToast('User ID is required to create or update a profile.', 'error');
       return;
     }
 
+    setIsLoading(true);
     const method = isEditing ? 'PUT' : 'POST';
     const url = '/api/profile/fan';
 
@@ -70,15 +75,17 @@ const FanProfileForm = ({ userId, onProfileSaved }) => {
       const data = await response.json();
 
       if (response.ok) {
-        setMessage(`Profile ${isEditing ? 'updated' : 'created'} successfully!`);
+        addToast(`Profile ${isEditing ? 'updated' : 'created'} successfully!`, 'success');
         setIsEditing(true);
         if (onProfileSaved) onProfileSaved();
       } else {
-        setMessage(`Failed to ${isEditing ? 'update' : 'create'} profile: ${data.message || 'Unknown error'}`);
+        addToast(`Failed to ${isEditing ? 'update' : 'create'} profile: ${data.message || 'Unknown error'}`, 'error');
       }
     } catch (error) {
       console.error(`Error ${isEditing ? 'updating' : 'creating'} fan profile:`, error);
-      setMessage(`Error ${isEditing ? 'updating' : 'creating'} profile. Please try again.`);
+      addToast(`Error ${isEditing ? 'updating' : 'creating'} profile. Please try again.`, 'error');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -98,11 +105,12 @@ const FanProfileForm = ({ userId, onProfileSaved }) => {
           <label htmlFor="listeningHistory" style={{ display: 'block', marginBottom: '5px' }}>Listening History (JSON string):</label>
           <textarea id="listeningHistory" value={listeningHistory} onChange={(e) => setListeningHistory(e.target.value)} style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }} rows="4"></textarea>
         </div>
-        <button type="submit" style={{ width: '100%', padding: '10px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-          {isEditing ? 'Update Profile' : 'Create Profile'}
+        <ProfileImageUpload onImageUploadSuccess={(url) => console.log('Fan profile image uploaded:', url)} />
+        <button type="submit" disabled={isLoading} style={{ width: '100%', padding: '10px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+          {isLoading ? 'Saving...' : (isEditing ? 'Update Profile' : 'Create Profile')}
         </button>
       </form>
-      {message && <p style={{ marginTop: '10px', color: message.includes('successfully') ? 'green' : 'red' }}>{message}</p>}
+      
     </div>
   );
 };

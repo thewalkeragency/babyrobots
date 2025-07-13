@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -44,6 +44,7 @@ model User {
   chatSessions         ChatSession[]
   tasks                Task[]
   assignedTasks        Task[] @relation("TaskAssignee")
+  releaseChecklists    ReleaseChecklist[]
 
   @@map("users")
 }
@@ -482,8 +483,10 @@ model Task {
   userId      Int       @map("user_id")
   projectId   Int?      @map("project_id")
   tags        String?   // JSON string
+  agentId     String?   @map("agent_id")
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
+  result      Json?     // To store the output/results from an agent task
 
   user         User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   assignedUser User? @relation("TaskAssignee", fields: [assignedTo], references: [id], onDelete: SetNull)
@@ -518,4 +521,52 @@ enum TokenPurpose {
   email_verification
   two_factor_auth
   service_auth
+}
+
+model AgentPerformanceLog {
+  id            Int      @id @default(autoincrement())
+  agentId       String
+  responseTime  Int
+  success       Boolean
+  errorDetails  String?
+  createdAt     DateTime @default(now())
+
+  @@map("agent_performance_logs")
+}
+
+model ReleaseChecklist {
+  id            Int      @id @default(autoincrement())
+  userId        Int      @map("user_id")
+  releaseType   String   @map("release_type")
+  releaseDate   DateTime? @map("release_date")
+  scheduledDate DateTime? @map("scheduled_date")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  progress      Float    @default(0)
+  totalTasks    Int      @default(0)
+  completedTasks Int      @default(0)
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks         ReleaseTask[]
+
+  @@map("release_checklists")
+}
+
+model ReleaseTask {
+  id            Int      @id @default(autoincrement())
+  checklistId   Int      @map("checklist_id")
+  taskId        String   @map("task_id") // Corresponds to the ID in the generator's template
+  task          String
+  description   String?
+  priority      String
+  category      String
+  dueDate       DateTime? @map("due_date")
+  completed     Boolean  @default(false)
+  completedAt   DateTime? @map("completed_at")
+  notes         String?
+  estimatedHours Int?
+
+  checklist     ReleaseChecklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+
+  @@map("release_tasks")
 }

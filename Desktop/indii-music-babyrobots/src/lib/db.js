@@ -113,6 +113,10 @@ db.exec(`
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE SET NULL
   );
+
+  CREATE INDEX IF NOT EXISTS idx_tracks_artist_id ON tracks (artist_id);
+  CREATE INDEX IF NOT EXISTS idx_tasks_user_id ON tasks (user_id);
+  CREATE INDEX IF NOT EXISTS idx_tasks_assigned_to ON tasks (assigned_to);
 `);
 
 export const createUser = (email, password, role = 'artist') => {

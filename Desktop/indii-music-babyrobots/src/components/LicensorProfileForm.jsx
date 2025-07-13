@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import ProfileImageUpload from './ProfileImageUpload';
+import { useToast } from './ui/Toast';
 
 const LicensorProfileForm = ({ userId, onProfileSaved }) => {
   const [companyName, setCompanyName] = useState('');
@@ -6,8 +8,10 @@ const LicensorProfileForm = ({ userId, onProfileSaved }) => {
   const [industry, setIndustry] = useState('');
   const [budgetRange, setBudgetRange] = useState('');
   const [licensingNeeds, setLicensingNeeds] = useState('');
-  const [message, setMessage] = useState('');
+  
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const addToast = useToast();
 
   useEffect(() => {
     if (userId) {
@@ -29,13 +33,13 @@ const LicensorProfileForm = ({ userId, onProfileSaved }) => {
             setIsEditing(true);
           } else if (response.status === 404) {
             setIsEditing(false);
-            setMessage('No existing profile found. You can create a new one below.');
+            addToast('No existing profile found. You can create a new one below.', 'info');
           } else {
-            setMessage(`Error fetching profile: ${data.message || 'Unknown error'}`);
+            addToast(`Error fetching profile: ${data.message || 'Unknown error'}`, 'error');
           }
         } catch (error) {
           console.error('Error fetching licensor profile:', error);
-          setMessage('Error fetching profile. Please try again.');
+          addToast('Error fetching profile. Please try again.', 'error');
         }
       };
       fetchProfile();
@@ -50,10 +54,11 @@ const LicensorProfileForm = ({ userId, onProfileSaved }) => {
     setMessage('');
 
     if (!userId) {
-      setMessage('User ID is required to create or update a profile.');
+      addToast('User ID is required to create or update a profile.', 'error');
       return;
     }
 
+    setIsLoading(true);
     const method = isEditing ? 'PUT' : 'POST';
     const url = '/api/profile/licensor';
 
@@ -76,15 +81,17 @@ const LicensorProfileForm = ({ userId, onProfileSaved }) => {
       const data = await response.json();
 
       if (response.ok) {
-        setMessage(`Profile ${isEditing ? 'updated' : 'created'} successfully!`);
+        addToast(`Profile ${isEditing ? 'updated' : 'created'} successfully!`, 'success');
         setIsEditing(true);
         if (onProfileSaved) onProfileSaved();
       } else {
-        setMessage(`Failed to ${isEditing ? 'update' : 'create'} profile: ${data.message || 'Unknown error'}`);
+        addToast(`Failed to ${isEditing ? 'update' : 'create'} profile: ${data.message || 'Unknown error'}`, 'error');
       }
     } catch (error) {
       console.error(`Error ${isEditing ? 'updating' : 'creating'} licensor profile:`, error);
-      setMessage(`Error ${isEditing ? 'updating' : 'creating'} profile. Please try again.`);
+      addToast(`Error ${isEditing ? 'updating' : 'creating'} profile. Please try again.`, 'error');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -112,11 +119,12 @@ const LicensorProfileForm = ({ userId, onProfileSaved }) => {
           <label htmlFor="licensingNeeds" style={{ display: 'block', marginBottom: '5px' }}>Licensing Needs:</label>
           <textarea id="licensingNeeds" value={licensingNeeds} onChange={(e) => setLicensingNeeds(e.target.value)} style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }} rows="4"></textarea>
         </div>
-        <button type="submit" style={{ width: '100%', padding: '10px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-          {isEditing ? 'Update Profile' : 'Create Profile'}
+        <ProfileImageUpload onImageUploadSuccess={(url) => console.log('Licensor profile image uploaded:', url)} />
+        <button type="submit" disabled={isLoading} style={{ width: '100%', padding: '10px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+          {isLoading ? 'Saving...' : (isEditing ? 'Update Profile' : 'Create Profile')}
         </button>
       </form>
-      {message && <p style={{ marginTop: '10px', color: message.includes('successfully') ? 'green' : 'red' }}>{message}</p>}
+      
     </div>
   );
 };

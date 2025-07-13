@@ -1,14 +1,23 @@
-import { createServiceProviderProfile, getServiceProviderProfileByUserId, updateServiceProviderProfile, deleteServiceProviderProfile } from '../../src/lib/db';
-import handler from '../../pages/api/profile/serviceProvider';
+import { jest } from '@jest/globals';
+import { faker } from '@faker-js/faker';
 
-// Mock the database functions
+// Define the mock functions first
+const mockCreateServiceProviderProfile = jest.fn();
+const mockGetServiceProviderProfileByUserId = jest.fn();
+const mockUpdateServiceProviderProfile = jest.fn();
+const mockDeleteServiceProviderProfile = jest.fn();
+
+// Then mock the module, returning these mock functions
 jest.mock('../../src/lib/db', () => ({
   __esModule: true,
-  createServiceProviderProfile: jest.fn(),
-  getServiceProviderProfileByUserId: jest.fn(),
-  updateServiceProviderProfile: jest.fn(),
-  deleteServiceProviderProfile: jest.fn(),
+  createServiceProviderProfile: mockCreateServiceProviderProfile,
+  getServiceProviderProfileByUserId: mockGetServiceProviderProfileByUserId,
+  updateServiceProviderProfile: mockUpdateServiceProviderProfile,
+  deleteServiceProviderProfile: mockDeleteServiceProviderProfile,
 }));
+
+// Now import the handler
+import handler from '../../pages/api/profile/serviceProvider';
 
 describe('Service Provider Profile API', () => {
   let req;
@@ -91,7 +100,7 @@ describe('Service Provider Profile API', () => {
 
   it('should return 404 if service provider profile not found on PUT', async () => {
     req.method = 'PUT';
-    req.body = { ...req.body, businessName: 'Updated Studio' };
+    req.body = { ...req.body, businessName: faker.company.name() };
     updateServiceProviderProfile.mockReturnValueOnce(0); // 0 changes made
 
     await handler(req, res);
@@ -114,7 +123,7 @@ describe('Service Provider Profile API', () => {
 
   it('should return 404 if service provider profile not found on DELETE', async () => {
     req.method = 'DELETE';
-    deleteServiceProviderProfile.mockReturnValueOnce(0); // 0 changes made
+    mockDeleteServiceProviderProfile.mockReturnValueOnce(0); // 0 changes made
 
     await handler(req, res);
 

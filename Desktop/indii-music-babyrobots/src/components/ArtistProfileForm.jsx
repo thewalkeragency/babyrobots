@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import ProfileImageUpload from './ProfileImageUpload';
+import { useToast } from './ui/Toast';
 
 const ArtistProfileForm = ({ userId, onProfileSaved }) => {
   const [stageName, setStageName] = useState('');
@@ -9,8 +11,10 @@ const ArtistProfileForm = ({ userId, onProfileSaved }) => {
   const [ipiNumber, setIpiNumber] = useState('');
   const [socialLinks, setSocialLinks] = useState(''); // Store as string for now
   const [profileImageUrl, setProfileImageUrl] = useState('');
-  const [message, setMessage] = useState('');
+  
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const addToast = useToast();
 
   useEffect(() => {
     if (userId) {
@@ -37,13 +41,13 @@ const ArtistProfileForm = ({ userId, onProfileSaved }) => {
             setIsEditing(true);
           } else if (response.status === 404) {
             setIsEditing(false);
-            setMessage('No existing profile found. You can create a new one below.');
+            addToast('No existing profile found. You can create a new one below.', 'info');
           } else {
-            setMessage(`Error fetching profile: ${data.message || 'Unknown error'}`);
+            addToast(`Error fetching profile: ${data.message || 'Unknown error'}`, 'error');
           }
         } catch (error) {
           console.error('Error fetching artist profile:', error);
-          setMessage('Error fetching profile. Please try again.');
+          addToast('Error fetching profile. Please try again.', 'error');
         }
       };
       fetchProfile();
@@ -59,10 +63,11 @@ const ArtistProfileForm = ({ userId, onProfileSaved }) => {
     setMessage('');
 
     if (!userId) {
-      setMessage('User ID is required to create or update a profile.');
+      addToast('User ID is required to create or update a profile.', 'error');
       return;
     }
 
+    setIsLoading(true);
     const method = isEditing ? 'PUT' : 'POST';
     const url = '/api/profile/artist';
 
@@ -89,15 +94,17 @@ const ArtistProfileForm = ({ userId, onProfileSaved }) => {
       const data = await response.json();
 
       if (response.ok) {
-        setMessage(`Profile ${isEditing ? 'updated' : 'created'} successfully!`);
+        addToast(`Profile ${isEditing ? 'updated' : 'created'} successfully!`, 'success');
         setIsEditing(true);
         if (onProfileSaved) onProfileSaved();
       } else {
-        setMessage(`Failed to ${isEditing ? 'update' : 'create'} profile: ${data.message || 'Unknown error'}`);
+        addToast(`Failed to ${isEditing ? 'update' : 'create'} profile: ${data.message || 'Unknown error'}`, 'error');
       }
     } catch (error) {
       console.error(`Error ${isEditing ? 'updating' : 'creating'} artist profile:`, error);
-      setMessage(`Error ${isEditing ? 'updating' : 'creating'} profile. Please try again.`);
+      addToast(`Error ${isEditing ? 'updating' : 'creating'} profile. Please try again.`, 'error');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -137,11 +144,12 @@ const ArtistProfileForm = ({ userId, onProfileSaved }) => {
           <label htmlFor="profileImageUrl" style={{ display: 'block', marginBottom: '5px' }}>Profile Image URL:</label>
           <input type="url" id="profileImageUrl" value={profileImageUrl} onChange={(e) => setProfileImageUrl(e.target.value)} style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }} />
         </div>
-        <button type="submit" style={{ width: '100%', padding: '10px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-          {isEditing ? 'Update Profile' : 'Create Profile'}
+        <ProfileImageUpload onImageUploadSuccess={setProfileImageUrl} />
+        <button type="submit" disabled={isLoading} style={{ width: '100%', padding: '10px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+          {isLoading ? 'Saving...' : (isEditing ? 'Update Profile' : 'Create Profile')}
         </button>
       </form>
-      {message && <p style={{ marginTop: '10px', color: message.includes('successfully') ? 'green' : 'red' }}>{message}</p>}
+      
     </div>
   );
 };

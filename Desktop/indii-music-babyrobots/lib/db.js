@@ -1,5 +1,9 @@
-const Database = require('better-sqlite3');
-const path = require('path');
+import Database from 'better-sqlite3';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Create database file in project root
 const dbPath = path.join(process.cwd(), 'indii-music.db');
@@ -323,7 +327,7 @@ function initializeDatabase() {
 // Initialize on first import
 initializeDatabase();
 
-// Helper functions
+// Helper functions  
 const db_helpers = {
   // User operations
   createUser: (userData) => {
@@ -912,10 +916,75 @@ const db_helpers = {
   updateTaskCompletion: (taskId, isCompleted) => {
     const stmt = db.prepare('UPDATE workspace_tasks SET is_completed = ? WHERE id = ?');
     return stmt.run(isCompleted ? 1 : 0, taskId);
+  },
+
+  // Utility functions for raw SQL queries
+  query: (sql, params = []) => {
+    const stmt = db.prepare(sql);
+    return stmt.all(...params);
+  },
+
+  run: (sql, params = []) => {
+    const stmt = db.prepare(sql);
+    return stmt.run(...params);
   }
 };
 
-module.exports = {
-  db,
-  ...db_helpers
-};
+// Export individual functions
+export const {
+  createUser,
+  getUserByEmail,
+  getUserById,
+  createArtistProfile,
+  getArtistProfile,
+  updateArtistProfile,
+  deleteArtistProfile,
+  createFanProfile,
+  getFanProfile,
+  updateFanProfile,
+  deleteFanProfile,
+  createLicensorProfile,
+  getLicensorProfile,
+  updateLicensorProfile,
+  deleteLicensorProfile,
+  createServiceProviderProfile,
+  getServiceProviderProfile,
+  updateServiceProviderProfile,
+  deleteServiceProviderProfile,
+  getUserWithProfile,
+  updateUserProfileType,
+  searchArtistProfiles,
+  searchFanProfiles,
+  searchLicensorProfiles,
+  searchServiceProviderProfiles,
+  getProfilesByType,
+  validateProfileData,
+  createTrack,
+  getTracksByArtist,
+  getTrackById,
+  createAudioFile,
+  createChatSession,
+  getChatSession,
+  updateChatSessionActivity,
+  createChatMessage,
+  getChatHistory,
+  updateSessionContext,
+  getSessionContext,
+  createSplitSheet,
+  getSplitSheetsByTrack,
+  createSplitSheetContributor,
+  getContributorsBySplitSheet,
+  createProjectWorkspace,
+  getWorkspacesByUser,
+  getWorkspaceById,
+  createWorkspaceFile,
+  getFilesByWorkspace,
+  createWorkspaceTask,
+  getTasksByWorkspace,
+  updateTaskCompletion,
+  query,
+  run
+} = db_helpers;
+
+export { db };
+export default db;

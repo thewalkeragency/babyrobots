@@ -11,6 +11,7 @@ const ACTUAL_DB_PATH = path.join(TEST_DB_DIR, 'indii-music.db');
 const originalCwd = process.cwd;
 
 jest.mock('../../lib/db', () => {
+  const { jest } = require('@jest/globals');
   // Ensure a clean, in-memory database for each test run that uses the actual module logic
   // We need to re-require the actual db module but force it to use an in-memory db
   // or a temporary test file db that gets cleaned up.

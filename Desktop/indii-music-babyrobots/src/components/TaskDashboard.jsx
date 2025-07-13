@@ -1,18 +1,28 @@
 import React, { useState } from 'react';
+import { Card, Badge, Button, Progress } from './ui';
+import {
+  MusicalNoteIcon,
+  ClockIcon,
+  CheckCircleIcon,
+  ExclamationCircleIcon,
+  PlayIcon,
+  CheckIcon,
+  ArrowPathIcon
+} from '@heroicons/react/24/outline';
 
 const TaskDashboard = ({ tasks, stats, onUpdateTask, userRole }) => {
   const [quickActionLoading, setQuickActionLoading] = useState(null);
 
   const priorityColors = {
-    high: 'bg-red-100 text-red-800 border-red-200',
-    medium: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    low: 'bg-green-100 text-green-800 border-green-200'
+    high: 'danger',
+    medium: 'warning',
+    low: 'success'
   };
 
   const statusColors = {
-    pending: 'bg-gray-100 text-gray-800',
-    in_progress: 'bg-blue-100 text-blue-800',
-    completed: 'bg-green-100 text-green-800'
+    pending: 'default',
+    in_progress: 'primary',
+    completed: 'success'
   };
 
   const getUpcomingTasks = () => {
@@ -80,211 +90,233 @@ const TaskDashboard = ({ tasks, stats, onUpdateTask, userRole }) => {
   };
 
   return (
-    <div className="task-dashboard space-y-6">
+    <div className="uk-child-width-1-1 uk-grid-small" uk-grid="true">
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
+      <div className="uk-child-width-1-4@m uk-grid-small" uk-grid="true">
+        <Card className="uk-card-body uk-theme-zinc dark uk-card-hover">
+          <div className="uk-flex uk-flex-middle uk-grid-small" uk-grid="true">
+            <div>
+              <div className="uk-border-circle uk-background-primary uk-flex uk-flex-center uk-flex-middle" style={{width: '40px', height: '40px'}}>
+                <MusicalNoteIcon style={{width: '20px', height: '20px', color: 'white'}} />
+              </div>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Tasks</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+            <div className="uk-width-expand">
+              <div className="uk-text-large uk-text-bold uk-text-white">{stats.total}</div>
+              <div className="uk-text-small uk-text-muted">Total Tasks</div>
             </div>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+        <Card className="uk-card-body uk-theme-zinc dark uk-card-hover">
+          <div className="uk-flex uk-flex-middle uk-grid-small" uk-grid="true">
+            <div>
+              <div className="uk-border-circle uk-background-secondary uk-flex uk-flex-center uk-flex-middle" style={{width: '40px', height: '40px'}}>
+                <ClockIcon style={{width: '20px', height: '20px', color: 'white'}} />
+              </div>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">In Progress</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.inProgress}</p>
+            <div className="uk-width-expand">
+              <div className="uk-text-large uk-text-bold uk-text-white">{stats.inProgress}</div>
+              <div className="uk-text-small uk-text-muted">In Progress</div>
             </div>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+        <Card className="uk-card-body uk-theme-zinc dark uk-card-hover">
+          <div className="uk-flex uk-flex-middle uk-grid-small" uk-grid="true">
+            <div>
+              <div className="uk-border-circle uk-flex uk-flex-center uk-flex-middle" style={{width: '40px', height: '40px', backgroundColor: '#f0ad4e'}}>
+                <CheckCircleIcon style={{width: '20px', height: '20px', color: 'white'}} />
+              </div>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Completed</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.completed}</p>
+            <div className="uk-width-expand">
+              <div className="uk-text-large uk-text-bold uk-text-white">{stats.completed}</div>
+              <div className="uk-text-small uk-text-muted">Completed</div>
             </div>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center">
-            <div className="p-2 bg-red-100 rounded-lg">
-              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
+        <Card className="uk-card-body uk-theme-zinc dark uk-card-hover">
+          <div className="uk-flex uk-flex-middle uk-grid-small" uk-grid="true">
+            <div>
+              <div className="uk-border-circle uk-flex uk-flex-center uk-flex-middle" style={{width: '40px', height: '40px', backgroundColor: '#8b5cf6'}}>
+                <ExclamationCircleIcon style={{width: '20px', height: '20px', color: 'white'}} />
+              </div>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Overdue</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.overdue}</p>
+            <div className="uk-width-expand">
+              <div className="uk-text-large uk-text-bold uk-text-white">{stats.overdue}</div>
+              <div className="uk-text-small uk-text-muted">Overdue</div>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Progress Chart */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Progress Overview</h3>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Completion Rate</span>
-            <span className="text-sm font-medium text-gray-900">{getCompletionRate()}%</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className="bg-green-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${getCompletionRate()}%` }}
-            ></div>
-          </div>
-          <div className="grid grid-cols-3 gap-4 text-sm">
-            <div className="text-center">
-              <div className="text-lg font-semibold text-gray-700">{stats.pending}</div>
-              <div className="text-gray-500">Pending</div>
+      <Card className="uk-card-body uk-theme-zinc dark uk-margin-top">
+        <h3 className="uk-card-title uk-text-white uk-margin-bottom">Progress Overview</h3>
+        <div className="uk-grid-small uk-child-width-1-3@m" uk-grid="true">
+          <div>
+            <div className="uk-text-center">
+              <div className="uk-text-large uk-text-bold uk-text-white">{stats.pending}</div>
+              <div className="uk-text-small uk-text-muted">Pending</div>
             </div>
-            <div className="text-center">
-              <div className="text-lg font-semibold text-blue-600">{stats.inProgress}</div>
-              <div className="text-gray-500">In Progress</div>
+          </div>
+          <div>
+            <div className="uk-text-center">
+              <div className="uk-text-large uk-text-bold uk-text-white">{stats.inProgress}</div>
+              <div className="uk-text-small uk-text-muted">In Progress</div>
             </div>
-            <div className="text-center">
-              <div className="text-lg font-semibold text-green-600">{stats.completed}</div>
-              <div className="text-gray-500">Completed</div>
+          </div>
+          <div>
+            <div className="uk-text-center">
+              <div className="uk-text-large uk-text-bold uk-text-white">{stats.completed}</div>
+              <div className="uk-text-small uk-text-muted">Completed</div>
             </div>
           </div>
         </div>
-      </div>
+        <div className="uk-margin-top">
+          <Progress value={getCompletionRate()} max={100} variant="primary" />
+          <div className="uk-text-right uk-text-small uk-text-muted">{getCompletionRate()}% Completed</div>
+        </div>
+      </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="uk-child-width-1-2@l uk-grid-small uk-margin-top" uk-grid="true">
         {/* Upcoming Deadlines */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Upcoming Deadlines</h3>
-          <div className="space-y-3">
+        <Card className="uk-card-body uk-theme-zinc dark">
+          <h3 className="uk-card-title uk-text-white uk-margin-bottom">Upcoming Deadlines</h3>
+          <ul className="uk-list uk-list-divider">
             {getUpcomingTasks().length === 0 ? (
-              <p className="text-gray-500 text-sm">No upcoming deadlines</p>
+              <li className="uk-text-muted">No upcoming deadlines</li>
             ) : (
               getUpcomingTasks().map(task => (
-                <div key={task.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-medium text-gray-900 truncate">{task.title}</h4>
-                    <p className="text-xs text-gray-600 mt-1">{formatDate(task.due_date)}</p>
-                  </div>
-                  <div className="flex items-center space-x-2 ml-3">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${priorityColors[task.priority]}`}>
-                      {task.priority}
-                    </span>
-                    {task.status === 'pending' && (
-                      <button
-                        onClick={() => handleQuickAction(task.id, 'start')}
-                        disabled={quickActionLoading === task.id}
-                        className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-                      >
-                        Start
-                      </button>
-                    )}
-                    {task.status === 'in_progress' && (
-                      <button
-                        onClick={() => handleQuickAction(task.id, 'complete')}
-                        disabled={quickActionLoading === task.id}
-                        className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
-                      >
-                        Complete
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* High Priority Tasks */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">High Priority Tasks</h3>
-          <div className="space-y-3">
-            {getHighPriorityTasks().length === 0 ? (
-              <p className="text-gray-500 text-sm">No high priority tasks</p>
-            ) : (
-              getHighPriorityTasks().map(task => (
-                <div key={task.id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-100">
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-medium text-gray-900 truncate">{task.title}</h4>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[task.status]}`}>
-                        {task.status.replace('_', ' ')}
-                      </span>
-                      {task.category && (
-                        <span className="text-xs text-gray-500">{task.category}</span>
+                <li key={task.id}>
+                  <div className="uk-flex uk-flex-middle uk-flex-between">
+                    <div>
+                      <h4 className="uk-h4 uk-margin-remove uk-text-white">{task.title}</h4>
+                      <p className="uk-text-small uk-text-muted uk-margin-remove">{formatDate(task.due_date)}</p>
+                    </div>
+                    <div className="uk-flex uk-flex-middle uk-grid-small" uk-grid="true">
+                      <div>
+                        <Badge variant={priorityColors[task.priority]}>
+                          {task.priority}
+                        </Badge>
+                      </div>
+                      {task.status === 'pending' && (
+                        <div>
+                          <Button
+                            onClick={() => handleQuickAction(task.id, 'start')}
+                            disabled={quickActionLoading === task.id}
+                            variant="primary" size="small"
+                          >
+                            <PlayIcon className="uk-icon uk-margin-small-right" style={{width: '16px', height: '16px'}} /> Start
+                          </Button>
+                        </div>
+                      )}
+                      {task.status === 'in_progress' && (
+                        <div>
+                          <Button
+                            onClick={() => handleQuickAction(task.id, 'complete')}
+                            disabled={quickActionLoading === task.id}
+                            variant="success" size="small"
+                          >
+                            <CheckIcon className="uk-icon uk-margin-small-right" style={{width: '16px', height: '16px'}} /> Complete
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2 ml-3">
-                    {task.status === 'pending' && (
-                      <button
-                        onClick={() => handleQuickAction(task.id, 'start')}
-                        disabled={quickActionLoading === task.id}
-                        className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-                      >
-                        Start
-                      </button>
-                    )}
-                    {task.status === 'in_progress' && (
-                      <button
-                        onClick={() => handleQuickAction(task.id, 'complete')}
-                        disabled={quickActionLoading === task.id}
-                        className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
-                      >
-                        Complete
-                      </button>
-                    )}
-                  </div>
-                </div>
+                </li>
               ))
             )}
-          </div>
-        </div>
+          </ul>
+        </Card>
+
+        {/* High Priority Tasks */}
+        <Card className="uk-card-body uk-theme-zinc dark">
+          <h3 className="uk-card-title uk-text-white uk-margin-bottom">High Priority Tasks</h3>
+          <ul className="uk-list uk-list-divider">
+            {getHighPriorityTasks().length === 0 ? (
+              <li className="uk-text-muted">No high priority tasks</li>
+            ) : (
+              getHighPriorityTasks().map(task => (
+                <li key={task.id}>
+                  <div className="uk-flex uk-flex-middle uk-flex-between">
+                    <div>
+                      <h4 className="uk-h4 uk-margin-remove uk-text-white">{task.title}</h4>
+                      <div className="uk-flex uk-flex-middle uk-grid-small uk-margin-small-top" uk-grid="true">
+                        <div>
+                          <Badge variant={statusColors[task.status]}>
+                            {task.status.replace('_', ' ')}
+                          </Badge>
+                        </div>
+                        {task.category && (
+                          <div>
+                            <span className="uk-text-small uk-text-muted">{task.category}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="uk-flex uk-flex-middle uk-grid-small" uk-grid="true">
+                      {task.status === 'pending' && (
+                        <div>
+                          <Button
+                            onClick={() => handleQuickAction(task.id, 'start')}
+                            disabled={quickActionLoading === task.id}
+                            variant="primary" size="small"
+                          >
+                            <PlayIcon className="uk-icon uk-margin-small-right" style={{width: '16px', height: '16px'}} /> Start
+                          </Button>
+                        </div>
+                      )}
+                      {task.status === 'in_progress' && (
+                        <div>
+                          <Button
+                            onClick={() => handleQuickAction(task.id, 'complete')}
+                            disabled={quickActionLoading === task.id}
+                            variant="success" size="small"
+                          >
+                            <CheckIcon className="uk-icon uk-margin-small-right" style={{width: '16px', height: '16px'}} /> Complete
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </li>
+              ))
+            )}
+          </ul>
+        </Card>
       </div>
 
       {/* Recent Activity */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Tasks</h3>
-        <div className="space-y-3">
+      <Card className="uk-card-body uk-theme-zinc dark uk-margin-top">
+        <h3 className="uk-card-title uk-text-white uk-margin-bottom">Recent Tasks</h3>
+        <ul className="uk-list uk-list-divider">
           {tasks.slice(0, 5).map(task => (
-            <div key={task.id} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
-              <div className="flex-1 min-w-0">
-                <h4 className="text-sm font-medium text-gray-900 truncate">{task.title}</h4>
-                <p className="text-xs text-gray-600 mt-1">
-                  Created {new Date(task.created_at).toLocaleDateString()}
-                </p>
+            <li key={task.id}>
+              <div className="uk-flex uk-flex-middle uk-flex-between">
+                <div>
+                  <h4 className="uk-h4 uk-margin-remove uk-text-white">{task.title}</h4>
+                  <p className="uk-text-small uk-text-muted uk-margin-remove">
+                    Created {new Date(task.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+                <div className="uk-flex uk-flex-middle uk-grid-small" uk-grid="true">
+                  <div>
+                    <Badge variant={priorityColors[task.priority]}>
+                      {task.priority}
+                    </Badge>
+                  </div>
+                  <div>
+                    <Badge variant={statusColors[task.status]}>
+                      {task.status.replace('_', ' ')}
+                    </Badge>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center space-x-2 ml-3">
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${priorityColors[task.priority]}`}>
-                  {task.priority}
-                </span>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[task.status]}`}>
-                  {task.status.replace('_', ' ')}
-                </span>
-              </div>
-            </div>
+            </li>
           ))}
-        </div>
-      </div>
+        </ul>
+      </Card>
     </div>
   );
 };

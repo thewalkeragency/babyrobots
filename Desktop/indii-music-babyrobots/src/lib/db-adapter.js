@@ -1,28 +1,11 @@
 // Database Adapter - switches between SQLite, Prisma, and Supabase
 // This allows us to develop the new system without breaking existing functionality
 
-// Environment flags to control which database to use
-const USE_SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const USE_PRISMA = process.env.USE_PRISMA === 'true' || process.env.DATABASE_URL?.includes('postgresql');
-const DB_PRIORITY = USE_SUPABASE ? 'supabase' : (USE_PRISMA ? 'prisma' : 'sqlite');
+// For now, just import the SQLite database directly
+import * as dbModule from './db.js';
+import bcrypt from 'bcrypt';
 
-let dbModule;
-
-try {
-  if (USE_PRISMA) {
-    // Try to use Prisma if environment is configured for it
-    dbModule = require('./db-prisma.js');
-    console.log('🔄 Using Prisma database adapter');
-  } else {
-    // Fall back to SQLite
-    dbModule = require('../../lib/db.js');
-    console.log('🔄 Using SQLite database adapter');
-  }
-} catch (error) {
-  console.warn('⚠️ Primary database failed, falling back to SQLite:', error.message);
-  // Always fall back to SQLite if Prisma fails
-  dbModule = require('../../lib/db.js');
-}
+console.log('🔄 Using SQLite database adapter');
 
 // Export all database functions - this maintains API compatibility
 export const {
@@ -104,6 +87,10 @@ export const {
   updateSessionContext,
   getSessionContext,
   
+  // Utility functions
+  query,
+  run,
+  
   // Default export (for backwards compatibility)
   db
 } = dbModule;
@@ -111,12 +98,8 @@ export const {
 // Additional helper functions
 export const isDatabaseConnected = async () => {
   try {
-    if (USE_PRISMA && dbModule.checkDatabaseConnection) {
-      return await dbModule.checkDatabaseConnection();
-    } else {
-      // For SQLite, just check if we can access the module
-      return true;
-    }
+    // For SQLite, just check if we can access the module
+    return true;
   } catch (error) {
     console.error('Database connection check failed:', error);
     return false;
@@ -124,19 +107,35 @@ export const isDatabaseConnected = async () => {
 };
 
 export const getDatabaseType = () => {
-  return USE_PRISMA ? 'prisma' : 'sqlite';
+  return 'sqlite';
 };
 
 export const disconnectDatabase = async () => {
-  if (USE_PRISMA && dbModule.disconnectDatabase) {
-    await dbModule.disconnectDatabase();
-  }
+  // SQLite doesn't need explicit disconnection
 };
 
 // Password verification (common to both systems)
 export const verifyPassword = (password, hashedPassword) => {
-  const bcrypt = require('bcrypt');
   return bcrypt.compareSync(password, hashedPassword);
+};
+
+// Health check function
+export const healthCheck = async () => {
+  try {
+    const isConnected = await isDatabaseConnected();
+    return {
+      status: isConnected ? 'healthy' : 'unhealthy',
+      database: getDatabaseType(),
+      connected: isConnected
+    };
+  } catch (error) {
+    return {
+      status: 'error',
+      database: getDatabaseType(),
+      connected: false,
+      error: error.message
+    };
+  }
 };
 
 export default dbModule;

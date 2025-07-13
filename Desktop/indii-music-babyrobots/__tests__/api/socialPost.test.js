@@ -1,4 +1,6 @@
 import handler from '../../pages/api/social/post';
+import { jest } from '@jest/globals';
+import { faker } from '@faker-js/faker';
 
 // Mock the dependencies
 jest.mock('../../src/lib/api-utils', () => ({
@@ -27,8 +29,8 @@ describe('POST /api/social/post', () => {
     
     // Mock the routePostRequest to return expected data
     routePostRequest.mockResolvedValue({
-      content: 'Generated social media post content',
-      hashtags: ['#new', '#music', '#artist']
+      content: faker.lorem.sentence(),
+      hashtags: [faker.llorem.word(), faker.lorem.word(), faker.lorem.word()]
     });
 
     await handler(req, res);

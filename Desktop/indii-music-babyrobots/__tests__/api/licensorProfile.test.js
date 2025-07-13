@@ -1,14 +1,23 @@
-import { createLicensorProfile, getLicensorProfileByUserId, updateLicensorProfile, deleteLicensorProfile } from '../../src/lib/db';
-import handler from '../../pages/api/profile/licensor';
+import { jest } from '@jest/globals';
+import { faker } from '@faker-js/faker';
 
-// Mock the database functions
+// Define the mock functions first
+const mockCreateLicensorProfile = jest.fn();
+const mockGetLicensorProfileByUserId = jest.fn();
+const mockUpdateLicensorProfile = jest.fn();
+const mockDeleteLicensorProfile = jest.fn();
+
+// Then mock the module, returning these mock functions
 jest.mock('../../src/lib/db', () => ({
   __esModule: true,
-  createLicensorProfile: jest.fn(),
-  getLicensorProfileByUserId: jest.fn(),
-  updateLicensorProfile: jest.fn(),
-  deleteLicensorProfile: jest.fn(),
+  createLicensorProfile: mockCreateLicensorProfile,
+  getLicensorProfileByUserId: mockGetLicensorProfileByUserId,
+  updateLicensorProfile: mockUpdateLicensorProfile,
+  deleteLicensorProfile: mockDeleteLicensorProfile,
 }));
+
+// Now import the handler
+import handler from '../../pages/api/profile/licensor';
 
 describe('Licensor Profile API', () => {
   let req;
@@ -91,7 +100,7 @@ describe('Licensor Profile API', () => {
 
   it('should return 404 if licensor profile not found on PUT', async () => {
     req.method = 'PUT';
-    req.body = { ...req.body, companyName: 'Updated Company' };
+    req.body = { ...req.body, companyName: faker.company.name() };
     updateLicensorProfile.mockReturnValueOnce(0); // 0 changes made
 
     await handler(req, res);
@@ -114,7 +123,7 @@ describe('Licensor Profile API', () => {
 
   it('should return 404 if licensor profile not found on DELETE', async () => {
     req.method = 'DELETE';
-    deleteLicensorProfile.mockReturnValueOnce(0); // 0 changes made
+    mockDeleteLicensorProfile.mockReturnValueOnce(0); // 0 changes made
 
     await handler(req, res);
 

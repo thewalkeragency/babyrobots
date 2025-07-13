@@ -1,7 +1,8 @@
 // Import the specific functions from lib/db that the API handler uses
 // and mock them.
-import { getChatSession, updateSessionContext } from '../../lib/db';
+import { getChatSession, updateSessionContext } from '../../src/lib/db-adapter';
 import handler from '../../pages/api/ai/session/[sessionId]/context';
+import { jest } from '@jest/globals';
 
 // Mock the imported db functions
 jest.mock('../../lib/db', () => ({

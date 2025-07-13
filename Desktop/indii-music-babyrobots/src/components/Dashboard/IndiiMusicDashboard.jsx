@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { clsx } from 'clsx';
 import VanillaTilt from 'vanilla-tilt';
-import { Card, Badge, Button, Progress } from '../ui';
+import { Card, Badge, Button, Progress, Select } from '../ui';
 import ArtCreationWorkspace from '../ArtCreation/ArtCreationWorkspace';
-import TaskManager from '../TaskManager';
+import ProjectWorkspaceUI from '../ProjectWorkspaceUI';
 import { ThemeToggle } from '../ui/ThemeToggle';
+import FrankenUIDemo from '../FrankenUIDemo';
 import { 
   WaveformDisplay, 
   AudioPlayer, 
@@ -13,6 +14,7 @@ import {
   SpectrumAnalyzer,
   AudioLevelMeter
 } from '../ui/AudioComponents';
+import { RoyaltyWidget, RecentActivityWidget } from './DashboardWidgets';
 import { 
   AIAgentCard, 
   AIChatInterface, 
@@ -37,15 +39,23 @@ import {
   Bars3Icon,
   XMarkIcon,
   MicrophoneIcon,
-  SpeakerWaveIcon
+  SpeakerWaveIcon,
+  CodeBracketIcon
 } from '@heroicons/react/24/outline';
 
-const IndiiMusicDashboard = ({ userRole = 'artist', userId, currentUser }) => {
+const IndiiMusicDashboard = ({ userRole = 'artist', userId, currentUser, onRoleChange }) => {
   const [activeWorkspace, setActiveWorkspace] = useState('tracks');
   const [activeAgent, setActiveAgent] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [messages, setMessages] = useState([]);
+  const [chatSessionId, setChatSessionId] = useState(null);
+
+  useEffect(() => {
+    if (!chatSessionId) {
+      setChatSessionId(`session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+    }
+  }, [chatSessionId]);
 
   // Mock agents data
   const agents = [
@@ -117,31 +127,29 @@ const IndiiMusicDashboard = ({ userRole = 'artist', userId, currentUser }) => {
     { id: 'analytics', name: 'Analytics', icon: ChartBarIcon, badge: null },
     { id: 'royalties', name: 'Royalties', icon: CurrencyDollarIcon, badge: null },
     { id: 'distribution', name: 'Distribution', icon: GlobeAltIcon, badge: null },
+    { id: 'franken-ui-demo', name: 'Franken UI', icon: CodeBracketIcon, badge: 'Demo' },
   ];
 
-  const handleSendMessage = (message) => {
-    const newMessage = {
-      role: 'user',
-      content: message,
-      timestamp: new Date().toLocaleTimeString()
-    };
-    setMessages(prev => [...prev, newMessage]);
-    
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse = {
-        role: 'assistant',
-        content: `I understand you want to ${message.toLowerCase()}. Let me help you with that.`,
-        timestamp: new Date().toLocaleTimeString()
-      };
-      setMessages(prev => [...prev, aiResponse]);
-    }, 1000);
-  };
+  useEffect(() => {
+    if (!chatSessionId) {
+      setChatSessionId(`session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+    }
+  }, [chatSessionId]);
 
   const handleAgentSelect = (agent) => {
     setActiveAgent(agent);
     setChatOpen(true);
-    setMessages([]);
+    setMessages([]); // Clear messages when switching agents/starting new chat
+  };
+
+  const handleSendMessage = async (message) => {
+    // For now, just log the message. In a real app, this would send to an API.
+    console.log('Sending message:', message);
+    setMessages((prevMessages) => [...prevMessages, { text: message, sender: 'user' }]);
+    // Simulate AI response
+    setTimeout(() => {
+      setMessages((prevMessages) => [...prevMessages, { text: `AI response to: ${message}`, sender: 'ai' }]);
+    }, 1000);
   };
 
   // Initialize VanillaTilt effects
@@ -166,92 +174,113 @@ const IndiiMusicDashboard = ({ userRole = 'artist', userId, currentUser }) => {
   }, [activeWorkspace]); // Re-initialize when workspace changes
 
   const TopNavigation = () => (
-    <div className="bg-studio-900 border-b border-technical-700 px-6 py-3">
-      <div className="flex items-center justify-between">
-        {/* Left: Logo and title */}
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="p-2 text-technical-400 hover:text-white hover:bg-technical-800 rounded-lg transition-colors lg:hidden"
-          >
-            {sidebarCollapsed ? <Bars3Icon className="h-5 w-5" /> : <XMarkIcon className="h-5 w-5" />}
-          </button>
-          
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-electric-400 to-electric-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">i</span>
-            </div>
-            <div>
-              <h1 className="text-white font-semibold text-lg">indii.music</h1>
-              <p className="text-technical-400 text-xs">AI-Powered Music Industry Platform</p>
-            </div>
+    <div className="uk-navbar-container uk-theme-zinc dark" uk-navbar="true">
+      <div className="uk-navbar-left">
+        <Button
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          variant="text" className="uk-hidden@m"
+          uk-icon="menu"
+        >
+        </Button>
+        
+        <div className="uk-flex uk-flex-middle uk-margin-small-left">
+          <div className="uk-border-circle uk-background-primary uk-flex uk-flex-center uk-flex-middle" style={{width: '32px', height: '32px'}}>
+            <span className="uk-text-white uk-text-bold uk-text-small">i</span>
+          </div>
+          <div className="uk-margin-small-left">
+            <h1 className="uk-text-white uk-margin-remove uk-text-lead">indii.music</h1>
+            <p className="uk-text-muted uk-margin-remove uk-text-small">AI-Powered Music Industry Platform</p>
           </div>
         </div>
+      </div>
 
-        {/* Center: Workspace title */}
-        <div className="hidden md:flex items-center space-x-2">
-          <div className="flex items-center space-x-2 px-3 py-1.5 bg-studio-800 rounded-lg border border-technical-700">
-            {React.createElement(workspaces.find(w => w.id === activeWorkspace)?.icon || MusicalNoteIcon, { 
-              className: "h-4 w-4 text-electric-400" 
-            })}
-            <span className="text-white text-sm font-medium">
-              {workspaces.find(w => w.id === activeWorkspace)?.name}
-            </span>
+      <div className="uk-navbar-center uk-visible@m">
+        <Card className="uk-card-small uk-padding-small uk-flex uk-flex-middle">
+          {React.createElement(workspaces.find(w => w.id === activeWorkspace)?.icon || MusicalNoteIcon, { 
+            className: "uk-icon uk-margin-small-right", 
+            style: {width: '16px', height: '16px', color: '#00d4aa'}
+          })}
+          <span className="uk-text-white uk-text-small uk-text-bold">
+            {workspaces.find(w => w.id === activeWorkspace)?.name}
+          </span>
+        </Card>
+      </div>
+
+      <div className="uk-navbar-right">
+        <div className="uk-flex uk-flex-middle uk-child-width-auto uk-grid-small" uk-grid="true">
+          <div><ThemeToggle variant="switch" /></div>
+          <div>
+            <Button variant="text" className="uk-position-relative" uk-icon="bell">
+              <span className="uk-badge uk-position-top-right uk-position-small" style={{backgroundColor: '#ff6b6b'}}></span>
+            </Button>
           </div>
-        </div>
-
-{/* Theme Toggle */}
-        <div className="flex items-center space-x-3">
-          <ThemeToggle variant="switch" />
-          <button className="relative p-2 text-technical-400 hover:text-white hover:bg-technical-800 rounded-lg transition-colors">
-            <BellIcon className="h-5 w-5" />
-            <div className="absolute -top-1 -right-1 w-3 h-3 bg-audio-warning rounded-full border-2 border-studio-900" />
-          </button>
-          
-          <button className="flex items-center space-x-2 p-2 text-technical-400 hover:text-white hover:bg-technical-800 rounded-lg transition-colors">
-            <UserCircleIcon className="h-6 w-6" />
-            <span className="hidden sm:block text-sm">{currentUser}</span>
-          </button>
+          <div>
+            <Select
+              value={userRole}
+              onChange={(e) => onRoleChange && onRoleChange(e.target.value)}
+              className="uk-form-small uk-form-width-small"
+            >
+              <option value="artist">Artist</option>
+              <option value="fan">Fan</option>
+              <option value="licensor">Licensor</option>
+              <option value="serviceProvider">Service Provider</option>
+            </Select>
+          </div>
+          <div>
+            <Button variant="text" className="uk-flex uk-flex-middle">
+              <UserCircleIcon className="uk-margin-small-right" style={{width: '24px', height: '24px', color: '#9ca3af'}} />
+              <span className="uk-text-small uk-visible@s">{currentUser}</span>
+            </Button>
+          </div>
         </div>
       </div>
     </div>
   );
 
   const Sidebar = () => (
-    <div className={clsx(
-      "bg-studio-900 border-r border-technical-700 flex flex-col transition-all duration-300",
-      sidebarCollapsed ? "w-16" : "w-64"
+    <Card className={clsx(
+      "uk-height-viewport uk-flex uk-flex-column uk-position-fixed uk-position-z-index uk-background-default uk-width-medium uk-animation-slide-left-small",
+      sidebarCollapsed ? "uk-width-small@m" : "uk-width-medium@m",
+      sidebarCollapsed && "uk-hidden@m",
+      !sidebarCollapsed && "uk-visible@s"
     )}>
       {/* Workspace Navigation */}
-      <div className="p-4 space-y-2">
-        {workspaces.map((workspace) => (
-          <button
-            key={workspace.id}
-            onClick={() => setActiveWorkspace(workspace.id)}
-            className={clsx(
-              "w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all duration-200",
-              activeWorkspace === workspace.id
-                ? "bg-electric-600/20 text-electric-400 border border-electric-500/30"
-                : "text-technical-400 hover:text-white hover:bg-technical-800"
-            )}
-          >
-            <workspace.icon className="h-5 w-5 flex-shrink-0" />
-            {!sidebarCollapsed && (
-              <>
-                <span className="text-sm font-medium">{workspace.name}</span>
-                {workspace.badge && (
-                  <Badge variant="primary" size="sm">{workspace.badge}</Badge>
+      <div className="uk-padding uk-flex-1">
+        <nav className="uk-nav uk-nav-default">
+          {workspaces.map((workspace) => (
+            <li key={workspace.id} className={activeWorkspace === workspace.id ? "uk-active" : ""}>
+              <Button
+                onClick={() => setActiveWorkspace(workspace.id)}
+                className={clsx(
+                  "uk-width-1-1 uk-text-left uk-flex uk-flex-middle",
+                  activeWorkspace === workspace.id
+                    ? "uk-background-primary uk-light"
+                    : "uk-text-muted"
                 )}
-              </>
-            )}
-          </button>
-        ))}
+                variant="text"
+              >
+                <workspace.icon 
+                  className="uk-margin-small-right" 
+                  style={{width: '20px', height: '20px'}} 
+                />
+                {!sidebarCollapsed && (
+                  <>
+                    <span className="uk-text-small uk-text-bold uk-margin-small-right">{workspace.name}</span>
+                    {workspace.badge && (
+                      <span className="uk-badge uk-badge-primary uk-margin-auto-left">{workspace.badge}</span>
+                    )}
+                  </>
+                )}
+              </Button>
+            </li>
+          ))}
+        </nav>
       </div>
 
       {/* AI Agents Section */}
       {!sidebarCollapsed && (
-        <div className="flex-1 p-4">
-          <h3 className="text-technical-400 text-xs font-semibold uppercase tracking-wider mb-3">
+        <div className="uk-padding uk-flex-1">
+          <h3 className="uk-text-muted uk-text-small uk-text-uppercase uk-text-bold uk-margin-small-bottom">
             AI Agents
           </h3>
           <AIAgentGrid 
@@ -263,88 +292,110 @@ const IndiiMusicDashboard = ({ userRole = 'artist', userId, currentUser }) => {
       )}
 
       {/* Footer */}
-      <div className="p-4 border-t border-technical-700">
-        <button className="w-full flex items-center space-x-3 px-3 py-2 text-technical-400 hover:text-white hover:bg-technical-800 rounded-lg transition-colors">
-          <Cog6ToothIcon className="h-5 w-5" />
-          {!sidebarCollapsed && <span className="text-sm">Settings</span>}
-        </button>
+      <div className="uk-padding uk-border-top">
+        <Button variant="text" className="uk-width-1-1 uk-text-left uk-flex uk-flex-middle uk-text-muted">
+          <Cog6ToothIcon className="uk-margin-small-right" style={{width: '20px', height: '20px'}} />
+          {!sidebarCollapsed && <span className="uk-text-small">Settings</span>}
+        </Button>
       </div>
-    </div>
+    </Card>
   );
 
   const renderWorkspaceContent = () => {
     switch (activeWorkspace) {
       case 'tracks':
         return (
-          <div className="space-y-6">
+          <div className="uk-margin-large-bottom">
             {/* Header with quick stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card className="bg-studio-800 border-technical-700 p-4 tilt">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-electric-400 to-electric-600 rounded-lg flex items-center justify-center">
-                    <MusicalNoteIcon className="h-5 w-5 text-white" />
+            <div className="uk-grid-match uk-child-width-1-4@m uk-grid-small" uk-grid="true">
+              <div>
+                <Card className="uk-card-body uk-theme-zinc dark uk-card-hover">
+                  <div className="uk-flex uk-flex-middle uk-grid-small" uk-grid="true">
+                    <div>
+                      <div className="uk-border-circle uk-background-primary uk-flex uk-flex-center uk-flex-middle" style={{width: '40px', height: '40px'}}>
+                        <MusicalNoteIcon style={{width: '20px', height: '20px', color: 'white'}} />
+                      </div>
+                    </div>
+                    <div className="uk-width-expand">
+                      <div className="uk-text-large uk-text-bold uk-text-white">12</div>
+                      <div className="uk-text-small uk-text-muted">Total Tracks</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-xl font-bold text-white">12</div>
-                    <div className="text-sm text-technical-400">Total Tracks</div>
-                  </div>
-                </div>
-              </Card>
+                </Card>
+              </div>
               
-              <Card className="bg-studio-800 border-technical-700 p-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-audio-levels to-emerald-600 rounded-lg flex items-center justify-center">
-                    <SpeakerWaveIcon className="h-5 w-5 text-white" />
+              <div>
+                <Card className="uk-card-body uk-theme-zinc dark uk-card-hover">
+                  <div className="uk-flex uk-flex-middle uk-grid-small" uk-grid="true">
+                    <div>
+                      <div className="uk-border-circle uk-background-secondary uk-flex uk-flex-center uk-flex-middle" style={{width: '40px', height: '40px'}}>
+                        <SpeakerWaveIcon style={{width: '20px', height: '20px', color: 'white'}} />
+                      </div>
+                    </div>
+                    <div className="uk-width-expand">
+                      <div className="uk-text-large uk-text-bold uk-text-white">8</div>
+                      <div className="uk-text-small uk-text-muted">Mastered</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-xl font-bold text-white">8</div>
-                    <div className="text-sm text-technical-400">Mastered</div>
-                  </div>
-                </div>
-              </Card>
+                </Card>
+              </div>
               
-              <Card className="bg-studio-800 border-technical-700 p-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-audio-warning to-yellow-600 rounded-lg flex items-center justify-center">
-                    <MicrophoneIcon className="h-5 w-5 text-white" />
+              <div>
+                <Card className="uk-card-body uk-theme-zinc dark uk-card-hover">
+                  <div className="uk-flex uk-flex-middle uk-grid-small" uk-grid="true">
+                    <div>
+                      <div className="uk-border-circle uk-flex uk-flex-center uk-flex-middle" style={{width: '40px', height: '40px', backgroundColor: '#f0ad4e'}}>
+                        <MicrophoneIcon style={{width: '20px', height: '20px', color: 'white'}} />
+                      </div>
+                    </div>
+                    <div className="uk-width-expand">
+                      <div className="uk-text-large uk-text-bold uk-text-white">3</div>
+                      <div className="uk-text-small uk-text-muted">In Queue</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-xl font-bold text-white">3</div>
-                    <div className="text-sm text-technical-400">In Queue</div>
-                  </div>
-                </div>
-              </Card>
+                </Card>
+              </div>
               
-              <Card className="bg-studio-800 border-technical-700 p-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
-                    <GlobeAltIcon className="h-5 w-5 text-white" />
+              <div>
+                <Card className="uk-card-body uk-theme-zinc dark uk-card-hover">
+                  <div className="uk-flex uk-flex-middle uk-grid-small" uk-grid="true">
+                    <div>
+                      <div className="uk-border-circle uk-flex uk-flex-center uk-flex-middle" style={{width: '40px', height: '40px', backgroundColor: '#8b5cf6'}}>
+                        <GlobeAltIcon style={{width: '20px', height: '20px', color: 'white'}} />
+                      </div>
+                    </div>
+                    <div className="uk-width-expand">
+                      <div className="uk-text-large uk-text-bold uk-text-white">5</div>
+                      <div className="uk-text-small uk-text-muted">Released</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-xl font-bold text-white">5</div>
-                    <div className="text-sm text-technical-400">Released</div>
-                  </div>
-                </div>
-              </Card>
+                </Card>
+              </div>
             </div>
 
-      {/* Main content grid with tilt interaction */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 tilt" style={{ perspective: '1000px' }}>
-        {/* Recent tracks with animated hover */}
-              <Card className="bg-studio-800 border-technical-700 p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Recent Tracks</h3>
-                <div className="space-y-4">
-                  <AudioPlayer compact track={{ title: "Summer Vibes", artist: "Demo Artist" }} />
-                  <AudioPlayer compact track={{ title: "Midnight Drive", artist: "Demo Artist" }} />
-                  <AudioPlayer compact track={{ title: "Electric Dreams", artist: "Demo Artist" }} />
-                </div>
-              </Card>
+            {/* Main content grid */}
+            <div className="uk-grid-match uk-child-width-1-2@l uk-margin-large-top" uk-grid="true">
+              {/* Recent tracks */}
+              <div>
+                <Card className="uk-card-body uk-theme-zinc dark">
+                  <h3 className="uk-card-title uk-text-white">Recent Tracks</h3>
+                  <div className="uk-margin-top">
+                    <AudioPlayer compact track={{ title: "Summer Vibes", artist: "Demo Artist" }} />
+                    <AudioPlayer compact track={{ title: "Midnight Drive", artist: "Demo Artist" }} />
+                    <AudioPlayer compact track={{ title: "Electric Dreams", artist: "Demo Artist" }} />
+                  </div>
+                </Card>
+              </div>
 
               {/* Quick actions */}
-              <Card className="bg-studio-800 border-technical-700 p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
-                <AIQuickActions onAction={(action) => console.log('Action:', action)} />
-              </Card>
+              <div>
+                <Card className="uk-card-body uk-theme-zinc dark">
+                  <h3 className="uk-card-title uk-text-white">Quick Actions</h3>
+                  <div className="uk-margin-top">
+                    <AIQuickActions onAction={(action) => console.log('Action:', action)} />
+                  </div>
+                </Card>
+              </div>
             </div>
           </div>
         );
@@ -359,12 +410,12 @@ const IndiiMusicDashboard = ({ userRole = 'artist', userId, currentUser }) => {
               </div>
               <div className="space-y-6">
                 <AudioStatsWidget />
-                <Card className="bg-studio-800 border-technical-700 p-4">
-                  <h3 className="text-lg font-semibold text-white mb-4">Mastering Queue</h3>
-                  <div className="space-y-3">
+                <Card className="uk-card-body uk-theme-zinc dark">
+                  <h3 className="uk-card-title uk-text-white uk-margin-bottom">Mastering Queue</h3>
+                  <div className="uk-margin-top">
                     {['Track 1.wav', 'Track 2.wav', 'Track 3.wav'].map((track, i) => (
-                      <div key={i} className="flex items-center justify-between p-3 bg-studio-900 rounded-lg">
-                        <span className="text-white">{track}</span>
+                      <div key={i} className="uk-flex uk-flex-middle uk-flex-between uk-padding-small uk-background-muted uk-border-rounded uk-margin-small-bottom">
+                        <span className="uk-text-white">{track}</span>
                         <Badge variant="warning" size="sm">Pending</Badge>
                       </div>
                     ))}
@@ -377,46 +428,19 @@ const IndiiMusicDashboard = ({ userRole = 'artist', userId, currentUser }) => {
 
       case 'analytics':
         return (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="bg-studio-800 border-technical-700 p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Streams</h3>
-                <div className="text-3xl font-bold text-electric-400 mb-2">24.8K</div>
-                <p className="text-sm text-technical-400">Total plays this month</p>
-                <div className="mt-4">
-                  <Progress value={75} variant="primary" showLabel />
-                </div>
-              </Card>
-              
-              <Card className="bg-studio-800 border-technical-700 p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Revenue</h3>
-                <div className="text-3xl font-bold text-audio-levels mb-2">$1,247</div>
-                <p className="text-sm text-technical-400">Earnings this quarter</p>
-                <div className="mt-4">
-                  <Progress value={60} variant="success" showLabel />
-                </div>
-              </Card>
-              
-              <Card className="bg-studio-800 border-technical-700 p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Engagement</h3>
-                <div className="text-3xl font-bold text-audio-warning mb-2">3.2K</div>
-                <p className="text-sm text-technical-400">New followers</p>
-                <div className="mt-4">
-                  <Progress value={45} variant="warning" showLabel />
-                </div>
-              </Card>
+          <div className="uk-grid-small uk-child-width-1-2@m uk-margin-top" uk-grid="true">
+            <div>
+              <RoyaltyWidget userId={userId} />
             </div>
-            
-            <Card className="bg-studio-800 border-technical-700 p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Performance Analytics</h3>
-              <SpectrumAnalyzer height={120} className="w-full" />
-            </Card>
+            <div>
+              <RecentActivityWidget userId={userId} />
+            </div>
           </div>
         );
 
       case 'art-creation':
         return (
-          <div className="h-full">
+          <div className="uk-height-1-1">
             <ArtCreationWorkspace 
               projectId="demo-project" 
               trackMetadata={{
@@ -430,10 +454,10 @@ const IndiiMusicDashboard = ({ userRole = 'artist', userId, currentUser }) => {
 
       case 'projects':
         return (
-          <div className="h-full">
-            <TaskManager 
-              userId={userId || 'demo-user-id'} 
-              userRole={userRole}
+          <div className="uk-height-1-1">
+            <ProjectWorkspaceUI 
+              workspaceId={userId} // Using userId as a mock workspaceId for now
+              userId={userId}
             />
           </div>
         );
@@ -441,33 +465,33 @@ const IndiiMusicDashboard = ({ userRole = 'artist', userId, currentUser }) => {
       case 'royalties':
         return (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="uk-grid-small uk-child-width-1-4@m" uk-grid="true">
               {[
                 { label: 'Spotify', amount: '$456.78', change: '+12%' },
                 { label: 'Apple Music', amount: '$321.45', change: '+8%' },
                 { label: 'YouTube', amount: '$189.23', change: '+15%' },
                 { label: 'Other DSPs', amount: '$279.87', change: '+5%' }
               ].map((platform, i) => (
-                <Card key={i} className="bg-studio-800 border-technical-700 p-4">
-                  <div className="text-technical-400 text-sm mb-1">{platform.label}</div>
-                  <div className="text-xl font-bold text-white mb-1">{platform.amount}</div>
-                  <div className="text-audio-levels text-xs">{platform.change}</div>
+                <Card key={i} className="uk-card-body uk-theme-zinc dark">
+                  <div className="uk-text-muted uk-text-small uk-margin-small-bottom">{platform.label}</div>
+                  <div className="uk-text-xl uk-text-bold uk-text-white uk-margin-small-bottom">{platform.amount}</div>
+                  <div className="uk-text-audio-levels uk-text-xs">{platform.change}</div>
                 </Card>
               ))}
             </div>
             
-            <Card className="bg-studio-800 border-technical-700 p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Revenue Breakdown</h3>
-              <div className="space-y-4">
+            <Card className="uk-card-body uk-theme-zinc dark">
+              <h3 className="uk-card-title uk-text-white uk-margin-bottom">Revenue Breakdown</h3>
+              <div className="uk-margin-top">
                 {[
                   { source: 'Streaming', amount: 456.78, percentage: 65 },
                   { source: 'Sync Licensing', amount: 189.50, percentage: 27 },
                   { source: 'Merchandise', amount: 56.30, percentage: 8 }
                 ].map((item, i) => (
-                  <div key={i} className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-technical-400">{item.source}</span>
-                      <span className="text-white font-mono">${item.amount}</span>
+                  <div key={i} className="uk-margin-small-bottom">
+                    <div className="uk-flex uk-flex-between uk-text-small">
+                      <span className="uk-text-muted">{item.source}</span>
+                      <span className="uk-text-white uk-text-bold">${item.amount}</span>
                     </div>
                     <Progress value={item.percentage} variant="primary" />
                   </div>
@@ -477,63 +501,75 @@ const IndiiMusicDashboard = ({ userRole = 'artist', userId, currentUser }) => {
           </div>
         );
 
+      case 'franken-ui-demo':
+        return (
+          <div className="uk-height-1-1">
+            <FrankenUIDemo />
+          </div>
+        );
+
       default:
         return (
-          <div className="text-center py-12">
-            <div className="text-technical-400 text-lg">Select a workspace to get started</div>
+          <div className="uk-text-center uk-padding-large">
+            <div className="uk-text-muted uk-text-large">Select a workspace to get started</div>
           </div>
         );
     }
   };
 
   return (
-    <div className="h-screen bg-studio-900 flex flex-col overflow-hidden">
+    <div className="uk-height-viewport uk-background-muted uk-flex uk-flex-column uk-theme-zinc dark">
       <TopNavigation />
       
-      <div className="flex-1 flex overflow-hidden">
+      <div className="uk-flex-1 uk-flex uk-overflow-hidden">
         <Sidebar />
         
         {/* Main Content */}
-        <div className="flex-1 flex overflow-hidden">
-          <div className="flex-1 overflow-y-auto">
-            <div className="p-6">
+        <div className={clsx(
+          "uk-flex-1 uk-flex uk-overflow-hidden",
+          sidebarCollapsed ? "uk-width-1-1" : "uk-width-expand@m"
+        )}>
+          <div className="uk-flex-1 uk-overflow-auto">
+            <div className="uk-padding">
               {renderWorkspaceContent()}
             </div>
           </div>
           
           {/* AI Chat Panel */}
           {chatOpen && (
-            <div className="w-80 border-l border-technical-700 bg-studio-900">
-              <div className="p-4 border-b border-technical-700 flex items-center justify-between">
-                <h3 className="text-white font-semibold">AI Assistant</h3>
-                <button
+            <Card className="uk-width-1-4 uk-width-1-1@s">
+              <div className="uk-card-header uk-flex uk-flex-between uk-flex-middle">
+                <h3 className="uk-card-title uk-text-white uk-margin-remove">AI Assistant</h3>
+                <Button
                   onClick={() => setChatOpen(false)}
-                  className="text-technical-400 hover:text-white"
+                  variant="text"
+                  uk-icon="close"
                 >
-                  <XMarkIcon className="h-5 w-5" />
-                </button>
+                </Button>
               </div>
               
-              <div className="p-4">
+              <div className="uk-card-body">
                 {activeAgent ? (
                   <AIChatInterface 
                     agent={activeAgent}
                     messages={messages}
                     onSendMessage={handleSendMessage}
-                    className="h-96"
+                    className="uk-height-large"
+                    sessionId={chatSessionId}
+                    userId={userId}
                   />
                 ) : (
-                  <div className="space-y-4">
+                  <div className="uk-margin-top">
                     <AIStatusPanel />
-                    <div className="text-center py-8">
-                      <div className="text-technical-400 text-sm">
+                    <div className="uk-text-center uk-padding">
+                      <div className="uk-text-muted uk-text-small">
                         Select an AI agent to start chatting
                       </div>
                     </div>
                   </div>
                 )}
               </div>
-            </div>
+            </Card>
           )}
         </div>
       </div>
